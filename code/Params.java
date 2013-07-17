@@ -7,12 +7,18 @@ public class Params {
 	static String toIndex(String source, String target){
 		return StrUtils.join(source, "->", target);
 	}
+	protected double getDefault(String source, String target){
+		if(source.equals(target)){
+			return -0.1;
+		} else {
+			return -1.0 * StrUtils.dist(source, target);
+		}
+	}
 	double get(String source, String target){
 		String index = toIndex(source, target);
 		Double wt = weights.get(index);
 		if(wt == null){
-			if(source.equals(target)) wt = -0.1; //wt = 1.0;
-			else wt = -1.0 * StrUtils.dist(source, target);
+			wt = getDefault(source, target);
 			weights.put(index, wt);	
 		}
 		return wt;

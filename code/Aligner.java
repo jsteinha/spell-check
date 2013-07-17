@@ -62,14 +62,20 @@ public class Aligner {
 			List<PackedAlignment> beam = state.next(); // TODO should not truncate here
 			for(PackedAlignment alignment : beam){
         for(BackPointer bp : alignment.backpointers){
-          bp.alignment.score.combineBackward(alignment, bp.alpha, bp.beta);
-          // TODO also update "ret" here
+					Double backward = alignment.score.backward + params.get(bp.alpha, bp.beta);
+					bp.predecessor.score.combineBackward(backward);
+					Double cnt = (Double)Util.get(ret, bp.alpha, bp.beta);
+					if(cnt == null){
+						cnt = 0.0;
+					}
+					cnt = cnt + Math.exp(bp.predecessor.score.totalScore + backward);
+					Util.put(ret, bp.alpha, bp.beta, cnt);
+					// TODO possibly want to add in logspace
         }
 			}
 		}
 		return ret;
 	}
-  }
 
   public static void main(String[] args){
     String source = "bandana";
@@ -81,83 +87,4 @@ public class Aligner {
     PackedAlignment ans = Aligner.argmax(state, params);
     System.out.println(ans);
   }
-}
-
-class AlignState {
-	HashMap<Context, HashMap<PackedAlignment, PackedAlignment> >[] beams;
-	private int curGrade;
-	private LinkedList<Context> curContexts;
-	final int maxGrade;
-  final PackedAlignment startState, finalState;
-	public AlignState(PackedAlignment startState, int maxGrade){
-    this.startState = startState;
-    this.finalState = new PackedAlignment(null, 0, -1, null, null, null);
-		this.maxGrade = maxGrade;
-		beams = new HashMap[maxGrade+1];
-		for(int i = 0; i <= maxGrade; i++)
-			beams[i] = new HashMap<Context, HashMap<PackedAlignment, PackedAlignment> >();
-		curContexts = new LinkedList<Context>();
-		curGrade = -1;
-
-    add(startState);
-	}
-	void add(PackedAlignment alignment){
-		Context c = new Context(alignment);
-		int grade = c.grade();
-    System.out.println("adding to grade " + grade);
-    if(grade == maxGrade && alignment.targetPosition.c == '$'){
-      System.out.println("adding...");
-      finalState.addBPs(alignment);
-    }
-		HashMap<PackedAlignment, PackedAlignment> existingMap = beams[grade].get(c);
-		if(existingMap == null){
-			existingMap = new HashMap<PackedAlignment, PackedAlignment>();
-			beams[grade].put(c, existingMap);
-		}
-		PackedAlignment existing = existingMap.get(alignment);
-		if(existing == null){
-			// TODO might be good to put a copy instead, to avoid pointer issues
-			existingMap.put(alignment, alignment);
-		} else {
-			existing.addBPs(alignment);
-		}
-	}
-	private void skipEmpty(){
-		while(curGrade <= maxGrade && curContexts.size() == 0){
-			curGrade++;
-      if(curGrade <= maxGrade){
-			  curContexts = new LinkedList<Context>(beams[curGrade].keySet());
-      }
-		}
-	}
-	boolean hasNext(){
-		skipEmpty();
-		return curGrade <= maxGrade;
-	}
-	List<PackedAlignment> next(){
-		skipEmpty();
-		Context c = curContexts.removeFirst();
-		return new LinkedList<PackedAlignment>(beams[curGrade].get(c).keySet());
-	}
-}
-
-class Context {
-	int grade;
-	public Context(PackedAlignment alignment){
-		grade = alignment.sourcePosition;
-	}
-	int grade(){
-		return grade;
-	}
-	@Override
-	public int hashCode(){
-		return grade;
-	}
-	@Override
-	public boolean equals(Object that){
-		return equals((Context)that);
-	}
-	boolean equals(Context that){
-		return this.grade == that.grade;
-	}
 }

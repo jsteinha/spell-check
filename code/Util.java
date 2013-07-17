@@ -34,7 +34,7 @@ public class Util {
         o = new HashMap();
         mp.put(kvs[i], o);
       }
-      mp = o;
+      mp = (Map)o;
     }
     mp.put(kvs[kvs.length-2], kvs[kvs.length-1]);
   }
@@ -43,8 +43,48 @@ public class Util {
     for(int i = 0; i < kvs.length-1; i++){
       Object o = mp.get(kvs[i]);
       if(o == null) return null;
-      mp = o;
+      mp = (Map)o;
     }
     return mp.get(kvs[kvs.length-1]);
   }
+
+	static HashMap<String, HashMap<String, Double> > normalize(HashMap<String, HashMap<String, Double>> in){
+		HashMap<String, HashMap<String, Double> > out = new HashMap<String, HashMap<String, Double>>();
+		for(String a : in.keySet()){
+			Double total = 0.0;
+			for(String b : in.get(a).keySet())
+				total += in.get(a).get(b);
+			if(total <= 1e-7) total += 1e-7;
+			HashMap<String, Double> out_a = new HashMap<String, Double>();
+			for(String b : in.get(a).keySet())
+				out_a.put(b, in.get(a).get(b)/total);
+			out.put(a, out_a);
+		}
+		return out;
+	}
+
+	static void incrMap(Map a, Map b){
+		for(Object o : b.keySet()){
+			Object oa = a.get(o);
+			Object ob = b.get(o);
+			if(ob instanceof Map){
+				if(oa == null){
+					oa = new HashMap();
+					a.put(o, oa);
+				}
+				incrMap((Map)oa, (Map)ob);
+			} else {
+				if(oa == null){
+					a.put(o, ob);
+				} else {
+					a.put(o, (Double)oa + (Double)ob);
+				}
+			}
+		}
+	}
+
+	static double logSafe(double x){
+		if(x <= 0) return Double.NEGATIVE_INFINITY;
+		else return Math.log(x);
+	}
 }
