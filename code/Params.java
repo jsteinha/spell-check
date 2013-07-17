@@ -9,9 +9,9 @@ public class Params {
 	}
 	protected double getDefault(String source, String target){
 		if(source.equals(target)){
-			return -0.1;
+			return 0.4;
 		} else {
-			return -1.0 * StrUtils.dist(source, target);
+			return 0.4-1.0 * StrUtils.dist(source, target);
 		}
 	}
 	double get(String source, String target){
@@ -35,4 +35,14 @@ public class Params {
     return bp.predecessor.score.increment(get(bp.alpha, bp.beta));
   }
 
+	void print(){
+		System.out.println("size: " + weights.size());
+		System.out.println("Params.weights {");
+		for(String index : weights.keySet()){
+			if(weights.get(index) > -2.0){
+				System.out.println("\t"+index+": "+weights.get(index));
+			}
+		}
+		System.out.println("}");
+	}
 }

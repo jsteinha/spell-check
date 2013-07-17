@@ -31,10 +31,10 @@ public class Aligner {
 
   static PackedAlignment argmax(AlignState state, Params params){
     PackedAlignment cur = state.finalState;
-    System.out.println("sourcePosition: " + cur.sourcePosition);
+    //System.out.println("sourcePosition: " + cur.sourcePosition);
     LinkedList<BackPointer> backpointers = new LinkedList<BackPointer>();
     while(cur.backpointers.size() > 0){
-      System.out.println("sourcePosition: " + cur.sourcePosition);
+      //System.out.println("sourcePosition: " + cur.sourcePosition);
       BackPointer best = null;
       for(BackPointer bp : cur.backpointers){
         if(best == null || params.score(bp).maxScore > 
@@ -49,7 +49,7 @@ public class Aligner {
     ret.order = 9999; // TODO fix this, it modifies the state of 
                       // something that might get accessed later
     for(BackPointer bp : backpointers){
-      System.out.println("a["+bp.alpha+"]->b["+bp.beta+"]");
+      //System.out.println("a["+bp.alpha+"]->b["+bp.beta+"]");
       ret = ret.extend(bp.alpha, bp.beta, null);
     }
     return ret;
@@ -57,18 +57,23 @@ public class Aligner {
 
   static HashMap<String, HashMap<String, Double>> counts(AlignState state, Params params){
     HashMap<String, HashMap<String, Double>> ret = new HashMap<String, HashMap<String, Double>>();
+		for(BackPointer bp : state.finalState.backpointers){
+			bp.predecessor.score.backward = 0.0;
+		}
     state.reverse(); // reverse ordering
 		while(state.hasNext()){
 			List<PackedAlignment> beam = state.next(); // TODO should not truncate here
 			for(PackedAlignment alignment : beam){
         for(BackPointer bp : alignment.backpointers){
 					Double backward = alignment.score.backward + params.get(bp.alpha, bp.beta);
+					//System.out.println("Sending backwards message: " + backward);
 					bp.predecessor.score.combineBackward(backward);
 					Double cnt = (Double)Util.get(ret, bp.alpha, bp.beta);
 					if(cnt == null){
 						cnt = 0.0;
 					}
 					cnt = cnt + Math.exp(bp.predecessor.score.totalScore + backward);
+					//System.out.println("updating count to " + cnt);
 					Util.put(ret, bp.alpha, bp.beta, cnt);
 					// TODO possibly want to add in logspace
         }

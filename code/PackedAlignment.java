@@ -45,7 +45,7 @@ public class PackedAlignment {
 	PackedAlignment extend(String transfemeSource,
                          String transfemeTarget,
                          Params params){
-    System.out.println("[" + source.substring(0, sourcePosition) + "]" + transfemeSource + "--->" + "[" + targetPosition + "]" + transfemeTarget);
+    //System.out.println("[" + source.substring(0, sourcePosition) + "]" + transfemeSource + "--->" + "[" + targetPosition + "]" + transfemeTarget);
 		int newSourcePosition = sourcePosition + transfemeSource.length();
 		Assert.assertSubstringEquals(transfemeSource, source, sourcePosition, newSourcePosition);
 		

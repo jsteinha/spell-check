@@ -54,7 +54,8 @@ public class Util {
 			Double total = 0.0;
 			for(String b : in.get(a).keySet())
 				total += in.get(a).get(b);
-			if(total <= 1e-7) total += 1e-7;
+			total += 3.0; // normalize with pseudocounts
+			//if(total <= 1e-7) total += 1e-7;
 			HashMap<String, Double> out_a = new HashMap<String, Double>();
 			for(String b : in.get(a).keySet())
 				out_a.put(b, in.get(a).get(b)/total);

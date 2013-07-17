@@ -22,9 +22,9 @@ public class AlignState {
 	void add(PackedAlignment alignment){
 		Context c = new Context(alignment);
 		int grade = c.grade();
-    System.out.println("adding to grade " + grade);
+    //System.out.println("adding to grade " + grade);
     if(grade == maxGrade && alignment.targetPosition.c == '$'){
-      System.out.println("adding...");
+      //System.out.println("adding...");
       finalState.addBPs(alignment);
     }
 		HashMap<PackedAlignment, PackedAlignment> existingMap = beams[grade].get(c);
@@ -47,7 +47,7 @@ public class AlignState {
 	private void skipEmpty(){
 		while(okay() && curContexts.size() == 0){
 			curGrade += direction;
-      if(curGrade <= maxGrade){
+      if(okay()){
 			  curContexts = new LinkedList<Context>(beams[curGrade].keySet());
       }
 		}

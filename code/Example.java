@@ -4,4 +4,8 @@ public class Example {
 		this.source = source;
 		this.target = target;
 	}
+	@Override
+	public String toString(){
+		return source + " => " + target;
+	}
 }

@@ -1,6 +1,6 @@
 import java.util.*;
 public class EMLearner {
-  final static int numIters = 1;
+  final static int numIters = 5;
   // modifies params based on the examples
   static Params learnOnce(List<Example> examples, Params paramsIn){
     HashMap<String, HashMap<String, Double>> totalCounts = new HashMap<String, HashMap<String, Double>>();
@@ -9,8 +9,14 @@ public class EMLearner {
       localDict.add(e.target);
       AlignState state = Aligner.align(paramsIn, e.source, localDict);
       Util.incrMap(totalCounts, Aligner.counts(state, paramsIn));
+			System.out.println("Done with example["+e+"]");
     }
+		totalCounts = Util.normalize(totalCounts);
 		Params paramsOut = new HardParams(totalCounts);
+		System.out.println("====================");
+		System.out.println("Intermediate params:");
+		System.out.println("====================");
+		paramsOut.print();
 		return paramsOut;
   }
 
