@@ -14,6 +14,7 @@ public class Util {
 		List<HashCode> hashedInputs = new LinkedList<HashCode>();
 		for(Integer x : inputs)
 			hashedInputs.add(hashInt(x));
+    hashedInputs.add(hashInt(0)); // make sure we have at least one element
 		return Hashing.combineOrdered(hashedInputs);
 	}
 	static HashCode hashInt(int x){

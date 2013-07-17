@@ -15,12 +15,13 @@ public class Aligner {
 				// TODO: want something more efficient for test time
 				List<TrieNode> extensions = alignment.targetPosition.getAllExtensions();
 				for(TrieNode targetExtension : extensions){
-					for(int i = alignment.sourcePosition+1; i < source.length(); i++){
+					for(int i = alignment.sourcePosition+1; i <= source.length(); i++){
+            //System.out.println(targetExtension + " - " + i);
 						PackedAlignment newAlignment = 
 								alignment.extend(source.substring(alignment.sourcePosition, i),
 																 alignment.targetPosition.spanTo(targetExtension),
                                  params);
-						beam.add(newAlignment);
+						state.add(newAlignment);
 					}
 				}
 			}
@@ -30,8 +31,10 @@ public class Aligner {
 
   static PackedAlignment argmax(AlignState state){
     PackedAlignment cur = state.finalState;
+    System.out.println("sourcePosition: " + cur.sourcePosition);
     LinkedList<BackPointer> backpointers = new LinkedList<BackPointer>();
     while(cur.backpointers.size() > 0){
+      System.out.println("sourcePosition: " + cur.sourcePosition);
       BackPointer best = null;
       for(BackPointer bp : cur.backpointers){
         if(best == null ||   bp.predecessor.score.maxScore > 
@@ -44,6 +47,7 @@ public class Aligner {
     }
     PackedAlignment ret = state.startState;
     for(BackPointer bp : backpointers){
+      System.out.println("a["+bp.alpha+"]->b["+bp.beta+"]");
       ret = ret.extend(bp.alpha, bp.beta, null);
     }
     return ret;
@@ -76,11 +80,15 @@ class AlignState {
 			beams[i] = new HashMap<Context, HashMap<PackedAlignment, PackedAlignment> >();
 		curContexts = new LinkedList<Context>();
 		curGrade = -1;
+
+    add(startState);
 	}
 	void add(PackedAlignment alignment){
 		Context c = new Context(alignment);
 		int grade = c.grade();
-    if(grade == maxGrade){
+    System.out.println("adding to grade " + grade);
+    if(grade == maxGrade && alignment.targetPosition.c == '$'){
+      System.out.println("adding...");
       finalState.addBPs(alignment);
     }
 		HashMap<PackedAlignment, PackedAlignment> existingMap = beams[grade].get(c);
@@ -97,9 +105,11 @@ class AlignState {
 		}
 	}
 	private void skipEmpty(){
-		while(curGrade < maxGrade && curContexts.size() == 0){
+		while(curGrade <= maxGrade && curContexts.size() == 0){
 			curGrade++;
-			curContexts = new LinkedList<Context>(beams[curGrade].keySet());
+      if(curGrade <= maxGrade){
+			  curContexts = new LinkedList<Context>(beams[curGrade].keySet());
+      }
 		}
 	}
 	boolean hasNext(){

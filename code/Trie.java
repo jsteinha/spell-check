@@ -9,7 +9,7 @@ public class Trie {
 		root = new TrieNode('\u0000', null);
 	}
 	void add(String str){
-		root.add(str+"$");
+		root.add(str);
 	}
 	void print(){
 		root.print();
@@ -81,6 +81,7 @@ class TrieNode {
 		return getExtension(extension) != null;
 	}
 	TrieNode getExtension(String extension){
+    //System.out.println("getting extension: [" + this + "]" + extension);
 		if(extension.length() == 0){
 			return this;
 		} else {
@@ -88,7 +89,7 @@ class TrieNode {
 			if(children[index] == null){
 				return null;
 			} else {
-				return getExtension(extension.substring(1));
+				return children[index].getExtension(extension.substring(1));
 			}
 		}
 	}
@@ -137,4 +138,10 @@ class TrieNode {
 			}
 		}
 	}
+
+  @Override
+  public String toString(){
+    //System.out.println(depth);
+    return (parent == null ? "" : parent.toString()) + c;
+  }
 }
