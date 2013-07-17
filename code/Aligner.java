@@ -46,6 +46,8 @@ public class Aligner {
       cur = best.predecessor;
     }
     PackedAlignment ret = state.startState;
+    ret.order = 9999; // TODO fix this, it modifies the state of 
+                      // something that might get accessed later
     for(BackPointer bp : backpointers){
       System.out.println("a["+bp.alpha+"]->b["+bp.beta+"]");
       ret = ret.extend(bp.alpha, bp.beta, null);
@@ -60,7 +62,7 @@ public class Aligner {
     Params params = new Params();
     dictionary.add(target);
     AlignState state = Aligner.align(params, source, dictionary);
-    PackedAlignment ans = Aligner.argmax(state);
+    PackedAlignment ans = Aligner.argmax(state, params);
     System.out.println(ans);
   }
 }

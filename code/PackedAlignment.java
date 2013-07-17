@@ -57,7 +57,7 @@ public class PackedAlignment {
 		LinkedList<Integer> newTargetBoundaries = 
 				new LinkedList<Integer>(targetTransfemeBoundaries);
 		newSourceBoundaries.add(newSourcePosition);
-		newTargetBoundaries.add(newTargetPosition.depth);
+		newTargetBoundaries.add(newTargetPosition.depth+1);
     PackedAlignment ret = new PackedAlignment(
                                source,
 															 this.order,
@@ -91,7 +91,18 @@ public class PackedAlignment {
   @Override
   public String toString(){
     String target = targetPosition.toString();
-    return source + "=>" + target;
+    String source2 = "", target2 = "";
+    int old_i = 0;
+    for(Integer i : sourceTransfemeBoundaries){
+      source2 += source.substring(old_i, i) + "|";
+      old_i = i;
+    }
+    old_i = 0;
+    for(Integer i : targetTransfemeBoundaries){
+      target2 += target.substring(old_i, i) + "|";
+      old_i = i;
+    }
+    return source2 + "=>" + target2;
   }
 }
 
