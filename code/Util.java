@@ -20,4 +20,9 @@ public class Util {
 		return hashFunction.hashLong((long)x);
 	}
 
+  static double logsumexp(double x, double y){
+    if(x < y) return logsumexp(y, x);
+    if(y == Double.NEGATIVE_INFINITY) return x;
+    return x + Math.log(1.0 + Math.exp(y-x));
+  }
 }

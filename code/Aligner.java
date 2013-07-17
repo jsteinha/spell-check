@@ -2,11 +2,13 @@ import java.util.*;
 public class Aligner {
 	static AlignState align(Params params, String source, Trie dictionary){
 		AlignState state = new AlignState(source.length());
-		state.add(new PackedAlignment(params.modelOrder(),
-																	0,
-																	dictionary.root(),
-																	new LinkedList<Integer>(),
-																  new LinkedList<Integer>()));
+		PackedAlignment init = new PackedAlignment(params.modelOrder(),
+																	             0,
+																	             dictionary.root(),
+																	             new LinkedList<Integer>(),
+																               new LinkedList<Integer>());
+    init.score = new Score(0.0, 0.0);
+    state.add(init);
 		while(state.hasNext()){
 			List<PackedAlignment> beam = state.next(); // returns truncated beam
 			for(PackedAlignment alignment : beam){
@@ -16,7 +18,8 @@ public class Aligner {
 					for(int i = alignment.sourcePosition+1; i < source.length(); i++){
 						PackedAlignment newAlignment = 
 								alignment.extend(source.substring(alignment.sourcePosition, i),
-																 alignment.targetPosition.spanTo(targetExtension));
+																 alignment.targetPosition.spanTo(targetExtension),
+                                 params);
 						beam.add(newAlignment);
 					}
 				}
@@ -53,7 +56,7 @@ class AlignState {
 			// TODO might be good to put a copy instead, to avoid pointer issues
 			existingMap.put(alignment, alignment);
 		} else {
-			existing.addBPs(alignment.backpointers);
+			existing.addBPs(alignment);
 		}
 	}
 	private void skipEmpty(){

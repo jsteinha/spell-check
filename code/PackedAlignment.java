@@ -4,6 +4,7 @@ public class PackedAlignment {
 	int order;
 
 	// information for DP state
+  Score score;
 	String source;
 	int sourcePosition;
 	TrieNode targetPosition;
@@ -24,14 +25,20 @@ public class PackedAlignment {
 			targetTransfemeBoundaries.removeFirst();
 		}
 		backpointers = new LinkedList<BackPointer>();
+    score = new Score();
 	}
-	void addBP(BackPointer bp){
+	void addBP(BackPointer bp, Params params){
       backpointers.add(bp);
+      Score curScore = params.score(bp);
+      score = score.combine(curScore);
 	}
-	void addBPs(List<BackPointer> bps){
-		backpointers.addAll(bps);
+	void addBPs(PackedAlignment other){
+		backpointers.addAll(other.backpointers);
+    score = score.combine(other.score);
 	}
-	PackedAlignment extend(String transfemeSource, String transfemeTarget){
+	PackedAlignment extend(String transfemeSource,
+                         String transfemeTarget,
+                         Params params){
 		int newSourcePosition = sourcePosition + transfemeSource.length();
 		Assert.assertSubstringEquals(transfemeSource, source, sourcePosition, newSourcePosition);
 		
@@ -50,7 +57,7 @@ public class PackedAlignment {
 															 newTargetPosition,
 															 newSourceBoundaries,
 															 newTargetBoundaries);
-    ret.addBP(new BackPointer(this, transfemeSource, transfemeTarget));
+    ret.addBP(new BackPointer(this, transfemeSource, transfemeTarget), params);
     return ret;
 	}
 
@@ -75,12 +82,3 @@ public class PackedAlignment {
 
 }
 
-class BackPointer {
-  final PackedAlignment predecessor;
-  final String alpha, beta;
-  public BackPointer(PackedAlignment predecessor, String alpha, String beta){
-    this.predecessor = predecessor;
-    this.alpha = alpha;
-    this.beta = beta;
-  }
-}
