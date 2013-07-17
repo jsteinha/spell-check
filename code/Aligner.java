@@ -1,6 +1,7 @@
 import java.util.*;
 public class Aligner {
 	static AlignState align(Params params, String source, Trie dictionary){
+    source += "$"; // add end of string character
 		PackedAlignment init = new PackedAlignment(source,
                                                params.modelOrder(),
 																	             0,
@@ -57,13 +58,21 @@ public class Aligner {
 
   static HashMap<String, HashMap<String, Double>> counts(AlignState state, Params params){
     HashMap<String, HashMap<String, Double>> ret = new HashMap<String, HashMap<String, Double>>();
-		for(BackPointer bp : state.finalState.backpointers){
-			bp.predecessor.score.backward = 0.0;
-		}
+    state.finalState.score.backward = 0.0;
     state.reverse(); // reverse ordering
-		while(state.hasNext()){
-			List<PackedAlignment> beam = state.next(); // TODO should not truncate here
+    boolean initialized = false;
+		while(!initialized || state.hasNext()){
+			List<PackedAlignment> beam;
+      if(initialized){
+        beam = state.next(); // TODO should not truncate here
+      } else {
+        initialized = true;
+        beam = new ArrayList<PackedAlignment>();
+        beam.add(state.finalState);
+      }
 			for(PackedAlignment alignment : beam){
+        if(alignment.score.backward == Double.NEGATIVE_INFINITY) continue;
+        //System.out.println("alignment " + alignment + " (score=["+alignment.score.totalScore+","+alignment.score.backward+"])");
         for(BackPointer bp : alignment.backpointers){
 					Double backward = alignment.score.backward + params.get(bp.alpha, bp.beta);
 					//System.out.println("Sending backwards message: " + backward);
@@ -72,7 +81,9 @@ public class Aligner {
 					if(cnt == null){
 						cnt = 0.0;
 					}
-					cnt = cnt + Math.exp(bp.predecessor.score.totalScore + backward);
+          Double bpScore = bp.predecessor.score.totalScore + backward;
+          //System.out.println("Giving score of " + bpScore + " to ["+bp.predecessor+","+bp.alpha+"=>"+bp.beta+"]");
+					cnt = cnt + Math.exp(bpScore);
 					//System.out.println("updating count to " + cnt);
 					Util.put(ret, bp.alpha, bp.beta, cnt);
 					// TODO possibly want to add in logspace

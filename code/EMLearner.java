@@ -5,11 +5,14 @@ public class EMLearner {
   static Params learnOnce(List<Example> examples, Params paramsIn){
     HashMap<String, HashMap<String, Double>> totalCounts = new HashMap<String, HashMap<String, Double>>();
     for(Example e : examples){
+			System.out.println("Processing example["+e+"]");
       Trie localDict = new Trie();
       localDict.add(e.target);
       AlignState state = Aligner.align(paramsIn, e.source, localDict);
+      PackedAlignment best = Aligner.argmax(state, paramsIn);
+      System.out.println("best correction: " + best);
       Util.incrMap(totalCounts, Aligner.counts(state, paramsIn));
-			System.out.println("Done with example["+e+"]");
+			System.out.println("Done with example");
     }
 		totalCounts = Util.normalize(totalCounts);
 		Params paramsOut = new HardParams(totalCounts);

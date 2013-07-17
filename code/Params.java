@@ -22,7 +22,9 @@ public class Params {
 		Double wt = weights.get(index);
 		if(wt == null){
 			wt = getDefault(source, target);
-			weights.put(index, wt);	
+      if(wt > Double.NEGATIVE_INFINITY){
+			  weights.put(index, wt);
+      }
 		}
 		return wt;
 	}

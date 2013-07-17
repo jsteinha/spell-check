@@ -112,6 +112,6 @@ public class TrieNode {
   @Override
   public String toString(){
     //System.out.println(depth);
-    return (parent == null ? "" : parent.toString()) + c;
+    return parent == null ? "" : (parent.toString() + c);
   }
 }
