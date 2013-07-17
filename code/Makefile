@@ -15,4 +15,4 @@ clean:
 	rm -f classes/$(NAME)/*.class
 
 run:
-	java -cp .:jars/guava-14.0.1.jar:classes/$(NAME) Trie
+	java -cp .:jars/guava-14.0.1.jar:classes/$(NAME) Alignment

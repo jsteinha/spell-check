@@ -1,14 +1,14 @@
 import java.util.*;
 public class Aligner {
 	static AlignState align(Params params, String source, Trie dictionary){
-		AlignState state = new AlignState(source.length());
-		PackedAlignment init = new PackedAlignment(params.modelOrder(),
+		PackedAlignment init = new PackedAlignment(source,
+                                               params.modelOrder(),
 																	             0,
 																	             dictionary.root(),
 																	             new LinkedList<Integer>(),
 																               new LinkedList<Integer>());
     init.score = new Score(0.0, 0.0);
-    state.add(init);
+		AlignState state = new AlignState(init, source.length());
 		while(state.hasNext()){
 			List<PackedAlignment> beam = state.next(); // returns truncated beam
 			for(PackedAlignment alignment : beam){
@@ -28,6 +28,37 @@ public class Aligner {
 		return state;
 	}
 
+  static PackedAlignment argmax(AlignState state){
+    PackedAlignment cur = state.finalState;
+    LinkedList<BackPointer> backpointers = new LinkedList<BackPointer>();
+    while(cur.backpointers.size() > 0){
+      BackPointer best = null;
+      for(BackPointer bp : cur.backpointers){
+        if(best == null ||   bp.predecessor.score.maxScore > 
+                           best.predecessor.score.maxScore){
+          best = bp;
+        }
+      }
+      backpointers.addFirst(best);
+      cur = best.predecessor;
+    }
+    PackedAlignment ret = state.startState;
+    for(BackPointer bp : backpointers){
+      ret = ret.extend(bp.alpha, bp.beta, null);
+    }
+    return ret;
+  }
+
+  public static void main(String[] args){
+    String source = "bandana";
+    String target = "banana";
+    Trie dictionary = new Trie();
+    Params params = new Params();
+    dictionary.add(target);
+    AlignState state = Aligner.align(params, source, dictionary);
+    PackedAlignment ans = Aligner.argmax(state);
+    System.out.println(ans);
+  }
 }
 
 class AlignState {
@@ -35,7 +66,10 @@ class AlignState {
 	private int curGrade;
 	private LinkedList<Context> curContexts;
 	final int maxGrade;
-	public AlignState(int maxGrade){
+  final PackedAlignment startState, finalState;
+	public AlignState(PackedAlignment startState, int maxGrade){
+    this.startState = startState;
+    this.finalState = new PackedAlignment(null, 0, -1, null, null, null);
 		this.maxGrade = maxGrade;
 		beams = new HashMap[maxGrade+1];
 		for(int i = 0; i <= maxGrade; i++)
@@ -46,6 +80,9 @@ class AlignState {
 	void add(PackedAlignment alignment){
 		Context c = new Context(alignment);
 		int grade = c.grade();
+    if(grade == maxGrade){
+      finalState.addBPs(alignment);
+    }
 		HashMap<PackedAlignment, PackedAlignment> existingMap = beams[grade].get(c);
 		if(existingMap == null){
 			existingMap = new HashMap<PackedAlignment, PackedAlignment>();

@@ -11,7 +11,7 @@ public class Params {
 		String index = toIndex(source, target);
 		Double wt = weights.get(index);
 		if(wt == null){
-			if(source.equals(target)) wt = 1.0;
+			if(source.equals(target)) wt = -0.1; //wt = 1.0;
 			else wt = -1.0 * StrUtils.dist(source, target);
 			weights.put(index, wt);	
 		}

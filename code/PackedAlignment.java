@@ -10,11 +10,13 @@ public class PackedAlignment {
 	TrieNode targetPosition;
 	LinkedList<Integer> sourceTransfemeBoundaries;
 	LinkedList<Integer> targetTransfemeBoundaries;
-	public PackedAlignment(int order,
+	public PackedAlignment(String source,
+                         int order,
 												 int sourcePosition,
 												 TrieNode targetPosition,
 												 LinkedList<Integer> sourceTransfemeBoundaries,
 												 LinkedList<Integer> targetTransfemeBoundaries){
+    this.source = source;
 		this.order = order;
 		this.sourcePosition = sourcePosition;
 		this.targetPosition = targetPosition;
@@ -29,8 +31,10 @@ public class PackedAlignment {
 	}
 	void addBP(BackPointer bp, Params params){
       backpointers.add(bp);
-      Score curScore = params.score(bp);
-      score = score.combine(curScore);
+      if(params != null){
+        Score curScore = params.score(bp);
+        score = score.combine(curScore);
+      }
 	}
 	void addBPs(PackedAlignment other){
 		backpointers.addAll(other.backpointers);
@@ -52,6 +56,7 @@ public class PackedAlignment {
 		newSourceBoundaries.add(newSourcePosition);
 		newTargetBoundaries.add(newTargetPosition.depth);
     PackedAlignment ret = new PackedAlignment(
+                               source,
 															 this.order,
 															 newSourcePosition,
 															 newTargetPosition,
@@ -80,5 +85,10 @@ public class PackedAlignment {
 
 	}
 
+  @Override
+  public String toString(){
+    String target = targetPosition.toString();
+    return source + "=>" + target;
+  }
 }
 
