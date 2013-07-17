@@ -29,7 +29,7 @@ public class Aligner {
 		return state;
 	}
 
-  static PackedAlignment argmax(AlignState state){
+  static PackedAlignment argmax(AlignState state, Params params){
     PackedAlignment cur = state.finalState;
     System.out.println("sourcePosition: " + cur.sourcePosition);
     LinkedList<BackPointer> backpointers = new LinkedList<BackPointer>();
@@ -37,8 +37,8 @@ public class Aligner {
       System.out.println("sourcePosition: " + cur.sourcePosition);
       BackPointer best = null;
       for(BackPointer bp : cur.backpointers){
-        if(best == null ||   bp.predecessor.score.maxScore > 
-                           best.predecessor.score.maxScore){
+        if(best == null || params.score(bp).maxScore > 
+                           params.score(best).maxScore){
           best = bp;
         }
       }
