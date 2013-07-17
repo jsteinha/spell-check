@@ -1,6 +1,6 @@
 import java.util.*;
 public class EMLearner {
-  final static int numIters = 5;
+  final static int numIters = 1;
   // modifies params based on the examples
   static Params learnOnce(List<Example> examples, Params paramsIn){
     HashMap<String, HashMap<String, Double>> totalCounts = new HashMap<String, HashMap<String, Double>>();

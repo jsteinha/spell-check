@@ -5,7 +5,7 @@ public class Main {
 		Scanner in = new Scanner(new File("../data/percy/train.dat"));
 		List<Example> examples = new ArrayList<Example>();
 		int count = 0;
-		while(in.hasNext() && count++ < 1000){
+		while(in.hasNext()){ // && count++ < 1000){
 			Example e = new Example(in.next().toLowerCase(), in.next().toLowerCase());
 			System.out.println(e);
 			if(e.source.matches("[a-z]+") && e.target.matches("[a-z]+")){

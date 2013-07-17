@@ -15,7 +15,7 @@ public class Aligner {
 				// TODO: want something more efficient for test time
 				List<TrieNode> extensions = alignment.targetPosition.getAllExtensions();
 				for(TrieNode targetExtension : extensions){
-					for(int i = alignment.sourcePosition+1; i <= source.length(); i++){
+					for(int i = alignment.sourcePosition+1; i <= source.length() && i <= alignment.sourcePosition+3; i++){
             //System.out.println(targetExtension + " - " + i);
 						PackedAlignment newAlignment = 
 								alignment.extend(source.substring(alignment.sourcePosition, i),

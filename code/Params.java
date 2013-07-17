@@ -8,10 +8,13 @@ public class Params {
 		return StrUtils.join(source, "->", target);
 	}
 	protected double getDefault(String source, String target){
+    if(source.length() > 2 || target.length() > 2){
+      return Double.NEGATIVE_INFINITY;
+    }
 		if(source.equals(target)){
-			return 0.4;
+			return 0.0;
 		} else {
-			return 0.4-1.0 * StrUtils.dist(source, target);
+			return 0.0-1.0 * StrUtils.dist(source, target);
 		}
 	}
 	double get(String source, String target){
