@@ -2,8 +2,7 @@ import java.util.*;
 public class Aligner {
 	static AlignState align(Params params, String source, Trie dictionary){
 		AlignState state = new AlignState(source.length());
-		state.add(new PackedAlignment(null,
-																  params.modelOrder(),
+		state.add(new PackedAlignment(params.modelOrder(),
 																	0,
 																	dictionary.root(),
 																	new LinkedList<Integer>(),
@@ -54,7 +53,7 @@ class AlignState {
 			// TODO might be good to put a copy instead, to avoid pointer issues
 			existingMap.put(alignment, alignment);
 		} else {
-			existing.addPredecessors(alignment.predecessors);
+			existing.addBPs(alignment.backpointers);
 		}
 	}
 	private void skipEmpty(){

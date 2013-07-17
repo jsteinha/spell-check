@@ -1,6 +1,6 @@
 import java.util.*;
 public class PackedAlignment {
-	List<PackedAlignment> predecessors;
+	List<BackPointer> backpointers;
 	int order;
 
 	// information for DP state
@@ -9,8 +9,7 @@ public class PackedAlignment {
 	TrieNode targetPosition;
 	LinkedList<Integer> sourceTransfemeBoundaries;
 	LinkedList<Integer> targetTransfemeBoundaries;
-	public PackedAlignment(PackedAlignment predecessor,
-												 int order,
+	public PackedAlignment(int order,
 												 int sourcePosition,
 												 TrieNode targetPosition,
 												 LinkedList<Integer> sourceTransfemeBoundaries,
@@ -24,16 +23,13 @@ public class PackedAlignment {
 			sourceTransfemeBoundaries.removeFirst();
 			targetTransfemeBoundaries.removeFirst();
 		}
-		predecessors = new LinkedList<PackedAlignment>();
-		addPredecessor(predecessor);
+		backpointers = new LinkedList<BackPointer>();
 	}
-	void addPredecessor(PackedAlignment predecessor){
-		if(predecessor != null){
-			predecessors.add(predecessor);
-		}
+	void addBP(BackPointer bp){
+      backpointers.add(bp);
 	}
-	void addPredecessors(List<PackedAlignment> newPredecessors){
-		predecessors.addAll(newPredecessors);
+	void addBPs(List<BackPointer> bps){
+		backpointers.addAll(bps);
 	}
 	PackedAlignment extend(String transfemeSource, String transfemeTarget){
 		int newSourcePosition = sourcePosition + transfemeSource.length();
@@ -48,13 +44,14 @@ public class PackedAlignment {
 				new LinkedList<Integer>(targetTransfemeBoundaries);
 		newSourceBoundaries.add(newSourcePosition);
 		newTargetBoundaries.add(newTargetPosition.depth);
-		
-		return new PackedAlignment(this,
+    PackedAlignment ret = new PackedAlignment(
 															 this.order,
 															 newSourcePosition,
 															 newTargetPosition,
 															 newSourceBoundaries,
 															 newTargetBoundaries);
+    ret.addBP(new BackPointer(this, transfemeSource, transfemeTarget));
+    return ret;
 	}
 
 	@Override
@@ -76,4 +73,14 @@ public class PackedAlignment {
 
 	}
 
+}
+
+class BackPointer {
+  final PackedAlignment predecessor;
+  final String alpha, beta;
+  public BackPointer(PackedAlignment predecessor, String alpha, String beta){
+    this.predecessor = predecessor;
+    this.alpha = alpha;
+    this.beta = beta;
+  }
 }
