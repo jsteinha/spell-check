@@ -26,4 +26,25 @@ public class Util {
     if(y == Double.NEGATIVE_INFINITY) return x;
     return x + Math.log(1.0 + Math.exp(y-x));
   }
+
+  static void put(Map mp, Object... kvs){
+    for(int i = 0; i < kvs.length-2; i++){
+      Object o = mp.get(kvs[i]);
+      if(o == null){
+        o = new HashMap();
+        mp.put(kvs[i], o);
+      }
+      mp = o;
+    }
+    mp.put(kvs[kvs.length-2], kvs[kvs.length-1]);
+  }
+
+  static Object get(Map mp, Object... kvs){
+    for(int i = 0; i < kvs.length-1; i++){
+      Object o = mp.get(kvs[i]);
+      if(o == null) return null;
+      mp = o;
+    }
+    return mp.get(kvs[kvs.length-1]);
+  }
 }

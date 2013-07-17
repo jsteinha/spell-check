@@ -55,6 +55,22 @@ public class Aligner {
     return ret;
   }
 
+  static HashMap<String, HashMap<String, Double>> counts(AlignState state, Params params){
+    HashMap<String, HashMap<String, Double>> ret = new HashMap<String, HashMap<String, Double>>();
+    state.reverse(); // reverse ordering
+		while(state.hasNext()){
+			List<PackedAlignment> beam = state.next(); // TODO should not truncate here
+			for(PackedAlignment alignment : beam){
+        for(BackPointer bp : alignment.backpointers){
+          bp.alignment.score.combineBackward(alignment, bp.alpha, bp.beta);
+          // TODO also update "ret" here
+        }
+			}
+		}
+		return ret;
+	}
+  }
+
   public static void main(String[] args){
     String source = "bandana";
     String target = "banana";
