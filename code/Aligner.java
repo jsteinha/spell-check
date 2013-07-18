@@ -1,4 +1,5 @@
 import java.util.*;
+import fig.basic.LogInfo;
 public class Aligner {
 	static AlignState align(Params params, String source, Trie dictionary){
     //source += "$"; // add end of string character
@@ -20,7 +21,6 @@ public class Aligner {
 						if(i == alignment.sourcePosition && targetExtension == alignment.targetPosition){
 							continue; // make sure we make at least one change
 						}
-            //System.out.println(targetExtension + " - " + i);
 						PackedAlignment newAlignment = 
 								alignment.extend(source.substring(alignment.sourcePosition, i),
 																 alignment.targetPosition.spanTo(targetExtension),
@@ -35,10 +35,8 @@ public class Aligner {
 
   static PackedAlignment argmax(AlignState state, Params params){
     PackedAlignment cur = state.finalState;
-    //System.out.println("sourcePosition: " + cur.sourcePosition);
     LinkedList<BackPointer> backpointers = new LinkedList<BackPointer>();
     while(cur.backpointers.size() > 0){
-      //System.out.println("sourcePosition: " + cur.sourcePosition);
       BackPointer best = null;
       for(BackPointer bp : cur.backpointers){
         if(best == null || params.score(bp).maxScore > 
@@ -53,7 +51,6 @@ public class Aligner {
     ret.order = 9999; // TODO fix this, it modifies the state of 
                       // something that might get accessed later
     for(BackPointer bp : backpointers){
-      //System.out.println("a["+bp.alpha+"]->b["+bp.beta+"]");
       ret = ret.extend(bp.alpha, bp.beta, null);
     }
     return ret;
@@ -62,7 +59,7 @@ public class Aligner {
   static HashMap<String, HashMap<String, Double>> counts(AlignState state, Params params){
     HashMap<String, HashMap<String, Double>> ret = new HashMap<String, HashMap<String, Double>>();
 		if(state.finalState.score.totalScore == Double.NEGATIVE_INFINITY){
-			System.out.println("No corrections found");
+			LogInfo.logs("No corrections found");
 			return new HashMap<String, HashMap<String, Double> >();
 		}
 		// make things normalize to 1.0
@@ -80,19 +77,15 @@ public class Aligner {
       }
 			for(PackedAlignment alignment : beam){
         if(alignment.score.backward == Double.NEGATIVE_INFINITY) continue;
-        //System.out.println("alignment " + alignment + " (score=["+alignment.score.totalScore+","+alignment.score.backward+"])");
         for(BackPointer bp : alignment.backpointers){
 					Double backward = alignment.score.backward + params.get(bp.alpha, bp.beta);
-					//System.out.println("Sending backwards message: " + backward);
 					bp.predecessor.score.combineBackward(backward);
 					Double cnt = (Double)Util.get(ret, bp.alpha, bp.beta);
 					if(cnt == null){
 						cnt = 0.0;
 					}
           Double bpScore = bp.predecessor.score.totalScore + backward;
-          //System.out.println("Giving score of " + bpScore + " to ["+bp.predecessor+","+bp.alpha+"=>"+bp.beta+"]");
 					cnt = cnt + Math.exp(bpScore);
-					//System.out.println("updating count to " + cnt);
 					Util.put(ret, bp.alpha, bp.beta, cnt);
 					// TODO possibly want to add in logspace
         }
@@ -101,14 +94,4 @@ public class Aligner {
 		return ret;
 	}
 
-  public static void main(String[] args){
-    String source = "bandana";
-    String target = "banana";
-    Trie dictionary = new Trie();
-    Params params = new Params();
-    dictionary.add(target);
-    AlignState state = Aligner.align(params, source, dictionary);
-    PackedAlignment ans = Aligner.argmax(state, params);
-    System.out.println(ans);
-  }
 }

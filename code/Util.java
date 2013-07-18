@@ -62,9 +62,6 @@ public class Util {
 		for(String a : num.keySet()){
 			HashMap<String, Double> out_a = new HashMap<String, Double>();
 			for(String b : num.get(a).keySet()){
-				/*if(num.get(a).get(b) / denom.get(a) > 0.01){
-					System.out.println(num.get(a).get(b) + " counts of "+a+"->"+b+", vs "+denom.get(a)+" counts of "+a);
-				}*/
 				out_a.put(b, num.get(a).get(b) / denom.get(a));
 			}
 			out.put(a, out_a);

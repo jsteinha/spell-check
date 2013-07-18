@@ -51,7 +51,6 @@ public class TrieNode {
 		return getExtension(extension) != null;
 	}
 	TrieNode getExtension(String extension){
-    //System.out.println("getting extension: [" + this + "]" + extension);
 		if(extension.length() == 0){
 			return this;
 		} else {
@@ -110,7 +109,6 @@ public class TrieNode {
 
   @Override
   public String toString(){
-    //System.out.println(depth);
     return parent == null ? "" : (parent.toString() + c);
   }
 }

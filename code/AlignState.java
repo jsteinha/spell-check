@@ -23,10 +23,8 @@ public class AlignState {
     if(alignment.score.maxScore == Double.NEGATIVE_INFINITY) return;
 		Context c = new Context(alignment);
 		int grade = c.grade();
-    //System.out.println("adding to grade " + grade);
     if(alignment.sourcePosition == alignment.source.length() &&
 			 alignment.targetPosition.c == '$'){
-      //System.out.println("adding " + alignment + "...");
       finalState.addBPs(alignment);
     }
 		HashMap<PackedAlignment, PackedAlignment> existingMap = beams[grade].get(c);

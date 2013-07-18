@@ -1,4 +1,5 @@
 import java.util.*;
+import fig.basic.LogInfo;
 public class Params {
 	Map<String, Double> weights;
 	public Params(){
@@ -41,13 +42,13 @@ public class Params {
   }
 
 	void print(){
-		System.out.println("size: " + weights.size());
-		System.out.println("Params.weights {");
+		LogInfo.logs("size: %d", weights.size());
+    LogInfo.begin_track("Params.weights");
 		for(String index : weights.keySet()){
 			if(weights.get(index) > -2.0){
-				System.out.println("\t"+index+": "+weights.get(index));
+				LogInfo.logs("%s: %f", index, weights.get(index));
 			}
 		}
-		System.out.println("}");
+    LogInfo.end_track();
 	}
 }

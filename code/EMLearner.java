@@ -1,4 +1,5 @@
 import java.util.*;
+import fig.basic.LogInfo;
 public class EMLearner {
 
   // modifies params based on the examples
@@ -34,7 +35,7 @@ public class EMLearner {
 
 	static Params learn(List<Example> examples){
 		Params params = new Params();
-		for(int iter = 0; iter < Main.numIters; iter++)
+		for(int iter = 0; iter < Main.numIter; iter++)
 			params = learnOnce(examples, params);
 		return params;
 	}

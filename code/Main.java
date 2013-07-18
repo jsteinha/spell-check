@@ -34,14 +34,17 @@ public class Main implements Runnable {
 		Scanner in = new Scanner(new File("../data/percy/train.dat"));
 		List<Example> examples = new ArrayList<Example>();
 		int count = 0;
+    LogInfo.begin_track("Reading training examples");
 		while(in.hasNext() && count++ < maxTrain){
 			Example e = new Example(in.next().toLowerCase()+"$", 
                               in.next().toLowerCase());
-			System.out.println(e);
+			LogInfo.logs(e);
 			if(e.source.matches("[a-z|$]+") && e.target.matches("[a-z]+")){
 				examples.add(e);
 			}
 		}
+    LogInfo.end_track();
+
 		Params params = EMLearner.learn(examples);
 		LogInfo.begin_track("Final params");
 		params.print();
@@ -71,7 +74,7 @@ public class Main implements Runnable {
       AlignState state = Aligner.align(params, e.source, dictionary);
       PackedAlignment best = Aligner.argmax(state, params);
 			boolean correct = (e.target+"$").equals(best.targetPosition.toString());
-      System.out.println("best correction: %s (correct=%s)", best, correct);
+      LogInfo.logs("best correction: %s (correct=%s)", best, correct);
 			accuracy.add(correct);
     }
 		LogInfo.logs("accuracy: %s", accuracy);
