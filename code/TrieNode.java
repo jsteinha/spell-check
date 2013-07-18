@@ -65,9 +65,8 @@ public class TrieNode {
 	}
 	LinkedList<TrieNode> getAllExtensions(int len){
 		LinkedList<TrieNode> ret = new LinkedList<TrieNode>();
-		if(len == 0){
-			ret.add(this);
-		} else {
+		ret.add(this);
+		if(len != 0){
 			for(TrieNode child : children){
 				if(child != null){
 					ret.addAll(child.getAllExtensions(len-1));

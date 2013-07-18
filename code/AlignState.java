@@ -24,7 +24,8 @@ public class AlignState {
 		Context c = new Context(alignment);
 		int grade = c.grade();
     //System.out.println("adding to grade " + grade);
-    if(grade == maxGrade && alignment.targetPosition.c == '$'){
+    if(alignment.sourcePosition == alignment.source.length() &&
+			 alignment.targetPosition.c == '$'){
       //System.out.println("adding " + alignment + "...");
       finalState.addBPs(alignment);
     }
@@ -71,7 +72,7 @@ public class AlignState {
 class Context {
 	int grade;
 	public Context(PackedAlignment alignment){
-		grade = alignment.sourcePosition;
+		grade = alignment.sourcePosition + alignment.targetPosition.depth;
 	}
 	int grade(){
 		return grade;

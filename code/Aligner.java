@@ -9,14 +9,17 @@ public class Aligner {
 																	             new LinkedList<Integer>(),
 																               new LinkedList<Integer>());
     init.score = new Score(0.0, 0.0);
-		AlignState state = new AlignState(init, source.length());
+		AlignState state = new AlignState(init, 99);
 		while(state.hasNext()){
 			List<PackedAlignment> beam = state.next(); // returns truncated beam
 			for(PackedAlignment alignment : beam){
 				// TODO: want something more efficient for test time
-				List<TrieNode> extensions = alignment.targetPosition.getAllExtensions();
+				List<TrieNode> extensions = alignment.targetPosition.getAllExtensions(2);
 				for(TrieNode targetExtension : extensions){
-					for(int i = alignment.sourcePosition+1; i <= source.length() && i <= alignment.sourcePosition+3; i++){
+					for(int i = alignment.sourcePosition; i <= source.length() && i <= alignment.sourcePosition+2; i++){
+						if(i == alignment.sourcePosition && targetExtension == alignment.targetPosition){
+							continue; // make sure we make at least one change
+						}
             //System.out.println(targetExtension + " - " + i);
 						PackedAlignment newAlignment = 
 								alignment.extend(source.substring(alignment.sourcePosition, i),
@@ -58,7 +61,12 @@ public class Aligner {
 
   static HashMap<String, HashMap<String, Double>> counts(AlignState state, Params params){
     HashMap<String, HashMap<String, Double>> ret = new HashMap<String, HashMap<String, Double>>();
-    state.finalState.score.backward = 0.0;
+		if(state.finalState.score.totalScore == Double.NEGATIVE_INFINITY){
+			System.out.println("No corrections found");
+			return new HashMap<String, HashMap<String, Double> >();
+		}
+		// make things normalize to 1.0
+    state.finalState.score.backward = -state.finalState.score.totalScore;
     state.reverse(); // reverse ordering
     boolean initialized = false;
 		while(!initialized || state.hasNext()){

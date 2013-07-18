@@ -48,6 +48,27 @@ public class Util {
     return mp.get(kvs[kvs.length-1]);
   }
 
+	static void update(HashMap<String, Double> mp, String k, Double v){
+		Double v0 = mp.get(k);
+		if(v0 == null){
+			mp.put(k, v);
+		}	else {
+			mp.put(k, v0+v);
+		}
+	}
+
+	static HashMap<String, HashMap<String, Double> > divide(HashMap<String, HashMap<String, Double>> num, HashMap<String, Double> denom){
+		HashMap<String, HashMap<String, Double>> out = new HashMap<String, HashMap<String, Double>>();
+		for(String a : num.keySet()){
+			HashMap<String, Double> out_a = new HashMap<String, Double>();
+			for(String b : num.get(a).keySet()){
+				out_a.put(b, num.get(a).get(b) / denom.get(a));
+			}
+			out.put(a, out_a);
+		}
+		return out;
+	}
+
 	static HashMap<String, HashMap<String, Double> > normalize(HashMap<String, HashMap<String, Double>> in){
 		HashMap<String, HashMap<String, Double> > out = new HashMap<String, HashMap<String, Double>>();
 		for(String a : in.keySet()){
