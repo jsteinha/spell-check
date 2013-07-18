@@ -58,17 +58,17 @@ public class AlignState {
 		skipEmpty();
 		return okay();
 	}
-  private static int beamSize = 1000;
+  //private static int beamSize = 0;
 	List<PackedAlignment> next(){
 		skipEmpty();
 		Context c = curContexts.removeFirst();
 		ArrayList<PackedAlignment> beamFull =
       new ArrayList<PackedAlignment>(beams[curGrade].get(c).keySet());
     Collections.sort(beamFull);
-    if(beamFull.size() < beamSize)
+    if(Main.beamSize == 0 || beamFull.size() < Main.beamSize)
       return beamFull;
     else
-      return beamFull.subList(0, beamSize);
+      return beamFull.subList(0, Main.beamSize);
 	}
 	void reverse(){
 		// TODO maybe add checking to make sure we don't screw up the state?

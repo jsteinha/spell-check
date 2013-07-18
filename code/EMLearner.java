@@ -1,41 +1,40 @@
 import java.util.*;
 public class EMLearner {
-  final static int numIters = 1;
+
   // modifies params based on the examples
   static Params learnOnce(List<Example> examples, Params paramsIn){
     HashMap<String, HashMap<String, Double>> totalCounts = new HashMap<String, HashMap<String, Double>>();
 		HashMap<String, Double> baseCounts = new HashMap<String, Double>();
     for(Example e : examples){
-			System.out.println("Processing example["+e+"]");
+			LogInfo.begin_track("Processing example[%s]", e);
       Trie localDict = new Trie();
       localDict.add(e.target);
       AlignState state = Aligner.align(paramsIn, e.source, localDict);
       PackedAlignment best = Aligner.argmax(state, paramsIn);
-      System.out.println("best correction: " + best);
+      LogInfo.logs("best correction: %s", best);
       Util.incrMap(totalCounts, Aligner.counts(state, paramsIn));
 			// get baseline counts
 			for(int i = 0; i <= e.source.length(); i++){
-				for(int j = 0; j <= 2; j++){
+				for(int j = 0; j <= Main.maxTransfemeSize; j++){
 					if(i+j <= e.source.length()){
-						//System.out.println(e.source + " " + i + " " + j);
 						Util.update(baseCounts, e.source.substring(i,i+j), 1.0);
 					}
 				}
 			}
-			System.out.println("Done with example");
+			LogInfo.end_track();
     }
 		totalCounts = Util.divide(totalCounts, baseCounts);
+		//totalCounts = Util.normalize(totalCounts);
 		Params paramsOut = new HardParams(totalCounts);
-		System.out.println("====================");
-		System.out.println("Intermediate params:");
-		System.out.println("====================");
+		LogInfo.begin_track("Intermediate params:");
 		paramsOut.print();
+		LogInfo.end_track();
 		return paramsOut;
   }
 
 	static Params learn(List<Example> examples){
 		Params params = new Params();
-		for(int iter = 0; iter < numIters; iter++)
+		for(int iter = 0; iter < Main.numIters; iter++)
 			params = learnOnce(examples, params);
 		return params;
 	}

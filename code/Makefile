@@ -3,10 +3,11 @@ ifndef $(NAME)
 endif
 
 prefix=../state/execs
+include=jars/guava-14.0.1.jar:jars/fig.jar
 
 % : %.java Makefile
 	rm -f *.class
-	javac -cp .:jars/guava-14.0.1.jar $<
+	javac -cp .:$(include) $<
 	mkdir -p classes/$(NAME)
 	mv *.class classes/$(NAME)/
 	mkdir -p $(prefix)/$(NAME)
@@ -15,4 +16,4 @@ clean:
 	rm -f classes/$(NAME)/*.class
 
 run:
-	java -cp .:jars/guava-14.0.1.jar:classes/$(NAME) Main
+	java -cp .:$(include):classes/$(NAME) Main

@@ -1,11 +1,40 @@
 import java.util.*;
 import java.io.*;
-public class Main {
-	public static void main(String[] args) throws Exception {
+import fig.basic.Option;
+import fig.exec.Execution;
+import fig.basic.LogInfo;
+import fig.basic.StatFig;
+public class Main implements Runnable {
+	@Option(gloss="experiment name (for easier tracking")
+	public static String experimentName = "NONE";
+	@Option(gloss="number of EM iterations")
+	public static int numIter = 1;
+	@Option(gloss="beam size (0 = infinite beam)")
+	public static int beamSize = 0;
+	@Option(gloss="max transfeme size")
+	public static int maxTransfemeSize = 2;
+	@Option(gloss="maximum number of training examples")
+	public static int maxTrain = 999999;
+	@Option(gloss="maximum number of test examples")
+	public static int maxTest = 999999;
+
+	public static void main(String[] args){
+		Execution.run(args, new Main());
+	}
+
+	public void run(){ 
+		try {
+			runWithException();
+		} catch(Exception e) {
+			throw new RuntimeException(e.toString());
+		}
+	}
+
+	public void runWithException() throws Exception {
 		Scanner in = new Scanner(new File("../data/percy/train.dat"));
 		List<Example> examples = new ArrayList<Example>();
 		int count = 0;
-		while(in.hasNext() && count++ < 10000){
+		while(in.hasNext() && count++ < maxTrain){
 			Example e = new Example(in.next().toLowerCase()+"$", 
                               in.next().toLowerCase());
 			System.out.println(e);
@@ -14,10 +43,9 @@ public class Main {
 			}
 		}
 		Params params = EMLearner.learn(examples);
-		System.out.println("====================");
-		System.out.println("    Final params:   ");
-		System.out.println("====================");
+		LogInfo.begin_track("Final params");
 		params.print();
+		LogInfo.end_track();
 
     Trie dictionary = new Trie();
     Scanner dict = new Scanner(new File("../data/percy/dict.txt"));
@@ -31,17 +59,21 @@ public class Main {
     Scanner testT = new Scanner(new File("../data/percy/test.ans"));
     List<Example> examplesTest = new ArrayList<Example>();
     count = 0;
-    while(testS.hasNext() && count++ < 20){
-      Example e = new Example(testS.next().toLowerCase(), testT.next().toLowerCase());
-			if(e.source.matches("[a-z]+") && e.target.matches("[a-z]+")){
+    while(testS.hasNext() && count++ < maxTest){
+      Example e = new Example(testS.next().toLowerCase()+"$", testT.next().toLowerCase());
+			if(e.source.matches("[a-z|$]+") && e.target.matches("[a-z]+")){
 				examplesTest.add(e);
 			}
     }
+		StatFig accuracy = new StatFig();
     for(Example e : examplesTest){
-      System.out.println("correcting " + e.source + " (target: " + e.target + ")");
+      LogInfo.logs("correcting %s (target: %s)", e.source, e.target);
       AlignState state = Aligner.align(params, e.source, dictionary);
       PackedAlignment best = Aligner.argmax(state, params);
-      System.out.println("best correction: " + best);
+			boolean correct = (e.target+"$").equals(best.targetPosition.toString());
+      System.out.println("best correction: %s (correct=%s)", best, correct);
+			accuracy.add(correct);
     }
+		LogInfo.logs("accuracy: %s", accuracy);
 	}
 }
