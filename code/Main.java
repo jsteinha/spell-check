@@ -58,12 +58,13 @@ public class Main implements Runnable {
         dictionary.add(word);
       }
     }
-    Scanner testS = new Scanner(new File("../data/percy/test.dat"));
-    Scanner testT = new Scanner(new File("../data/percy/test.ans"));
+    /*Scanner testS = new Scanner(new File("../data/percy/test.dat"));
+    Scanner testT = new Scanner(new File("../data/percy/test.ans"));*/
+    Scanner dev = new Scanner(new File("../data/percy/dev.dat"));
     List<Example> examplesTest = new ArrayList<Example>();
     count = 0;
-    while(testS.hasNext() && count++ < maxTest){
-      Example e = new Example(testS.next().toLowerCase()+"$", testT.next().toLowerCase());
+    while(dev.hasNext() && count++ < maxTest){
+      Example e = new Example(dev.next().toLowerCase()+"$", dev.next().toLowerCase());
 			if(e.source.matches("[a-z|$]+") && e.target.matches("[a-z]+")){
 				examplesTest.add(e);
 			}

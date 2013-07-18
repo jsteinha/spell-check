@@ -16,4 +16,4 @@ clean:
 	rm -f classes/$(NAME)/*.class
 
 run:
-	java -cp .:$(include):classes/$(NAME) Main
+	java -cp .:$(include):classes/$(NAME) Main -execPoolDir $(prefix)/$(NAME) -Main.experimentName $(NAME) -Main.beamSize $(BEAM_SIZE)
