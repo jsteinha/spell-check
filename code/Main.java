@@ -6,9 +6,10 @@ public class Main {
 		List<Example> examples = new ArrayList<Example>();
 		int count = 0;
 		while(in.hasNext() && count++ < 10000){
-			Example e = new Example(in.next().toLowerCase(), in.next().toLowerCase());
+			Example e = new Example(in.next().toLowerCase()+"$", 
+                              in.next().toLowerCase());
 			System.out.println(e);
-			if(e.source.matches("[a-z]+") && e.target.matches("[a-z]+")){
+			if(e.source.matches("[a-z|$]+") && e.target.matches("[a-z]+")){
 				examples.add(e);
 			}
 		}

@@ -1,5 +1,5 @@
 import java.util.*;
-public class PackedAlignment {
+public class PackedAlignment implements Comparable {
 	List<BackPointer> backpointers;
 	int order;
 
@@ -104,6 +104,11 @@ public class PackedAlignment {
       old_i = i;
     }
     return source2 + "=>" + target2;
+  }
+
+  @Override
+  public int compareTo(Object other){
+    return score.totalScore > ((PackedAlignment)other).score.totalScore ? -1 : 1;
   }
 }
 

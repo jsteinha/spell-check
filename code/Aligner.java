@@ -1,7 +1,7 @@
 import java.util.*;
 public class Aligner {
 	static AlignState align(Params params, String source, Trie dictionary){
-    source += "$"; // add end of string character
+    //source += "$"; // add end of string character
 		PackedAlignment init = new PackedAlignment(source,
                                                params.modelOrder(),
 																	             0,
