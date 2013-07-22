@@ -36,10 +36,10 @@ public class Main implements Runnable {
 		int count = 0;
     LogInfo.begin_track("Reading training examples");
 		while(in.hasNext() && count++ < maxTrain){
-			Example e = new Example(in.next().toLowerCase()+"$", 
+			Example e = new Example("^"+in.next().toLowerCase()+"$", 
                               in.next().toLowerCase());
 			LogInfo.logs(e);
-			if(e.source.matches("[a-z|$]+") && e.target.matches("[a-z]+")){
+			if(e.source.matches("[a-z|$|^]+") && e.target.matches("[a-z]+")){
 				examples.add(e);
 			}
 		}
@@ -64,20 +64,24 @@ public class Main implements Runnable {
     List<Example> examplesTest = new ArrayList<Example>();
     count = 0;
     while(dev.hasNext() && count++ < maxTest){
-      Example e = new Example(dev.next().toLowerCase()+"$", dev.next().toLowerCase());
-			if(e.source.matches("[a-z|$]+") && e.target.matches("[a-z]+")){
+      Example e = new Example("^"+dev.next().toLowerCase()+"$", dev.next().toLowerCase());
+			if(e.source.matches("[a-z|$|^]+") && e.target.matches("[a-z]+")){
 				examplesTest.add(e);
 			}
     }
 		StatFig accuracy = new StatFig();
+		int counter = 0;
     for(Example e : examplesTest){
       LogInfo.logs("correcting %s (target: %s)", e.source, e.target);
       AlignState state = Aligner.align(params, e.source, dictionary);
       PackedAlignment best = Aligner.argmax(state, params);
-			boolean correct = (e.target+"$").equals(best.targetPosition.toString());
+			boolean correct = ("^"+e.target+"$").equals(best.targetPosition.toString());
       LogInfo.logs("best correction: %s (correct=%s)", best, correct);
 			accuracy.add(correct);
+			if(++counter % 100 == 0){
+				LogInfo.logs("accuracy: %s", accuracy);
+			}
     }
-		LogInfo.logs("accuracy: %s", accuracy);
+		LogInfo.logs("final accuracy: %s", accuracy);
 	}
 }

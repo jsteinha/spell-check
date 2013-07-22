@@ -9,7 +9,7 @@ public class Trie {
 		root = new TrieNode('\u0000', null);
 	}
 	void add(String str){
-		root.add(str);
+		root.add("^"+str);
 	}
 	void print(){
 		root.print();
@@ -18,13 +18,4 @@ public class Trie {
 		return root;
 	}
 
-	public static void main(String[] args){
-		Trie trie = new Trie();
-		trie.add("abra");
-		trie.add("abracadabra");
-		trie.add("ahead");
-		trie.add("banana");
-		trie.add("bandana");
-		trie.print();
-	}
 }

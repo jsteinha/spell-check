@@ -11,7 +11,7 @@ public class TrieNode {
 		this.c = c;
 		this.parent = parent;
 		this.depth = parent == null ? 0 : parent.depth + 1;
-		children = new TrieNode[27];
+		children = new TrieNode[28];
 	}
 	void add(String suffix){
 		if(suffix.length() == 0){
@@ -29,6 +29,8 @@ public class TrieNode {
 			index = (int)(c-'a');
 		} else if(c == '$'){
 			index = 26;
+		} else if(c == '^'){
+			index = 27;
 		} else {
 			throw new RuntimeException("invalid character: " + c);
 		}
