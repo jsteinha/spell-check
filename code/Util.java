@@ -62,7 +62,7 @@ public class Util {
 		for(String a : num.keySet()){
 			HashMap<String, Double> out_a = new HashMap<String, Double>();
 			for(String b : num.get(a).keySet()){
-				if(denom.get(b) < 10.0){ // TODO hack to avoid overfitting
+				if(denom.get(b) > 10.0){ // TODO hack to avoid overfitting
 					out_a.put(b, num.get(a).get(b)/ denom.get(b)); // TODO dividing on b is unintuitive
 				}
 				//out_a.put(b, num.get(a).get(b) / (denom.get(a)+3.0)); // TODO hack
