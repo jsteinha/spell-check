@@ -17,6 +17,8 @@ public class Main implements Runnable {
 	public static int maxTrain = 999999;
 	@Option(gloss="maximum number of test examples")
 	public static int maxTest = 999999;
+	@Option(gloss="evaluation file name (train, dev)")
+	public static String evalName = "dev";
 
 	public static void main(String[] args){
 		Execution.run(args, new Main());
@@ -60,7 +62,7 @@ public class Main implements Runnable {
     }
     /*Scanner testS = new Scanner(new File("../data/percy/test.dat"));
     Scanner testT = new Scanner(new File("../data/percy/test.ans"));*/
-    Scanner dev = new Scanner(new File("../data/percy/dev.dat"));
+    Scanner dev = new Scanner(new File("../data/percy/"+evalName+".dat"));
     List<Example> examplesTest = new ArrayList<Example>();
     count = 0;
     while(dev.hasNext() && count++ < maxTest){

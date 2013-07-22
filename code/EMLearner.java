@@ -15,10 +15,11 @@ public class EMLearner {
       LogInfo.logs("best correction: %s", best);
       Util.incrMap(totalCounts, Aligner.counts(state, paramsIn));
 			// get baseline counts
-			for(int i = 0; i <= e.source.length(); i++){
+			String baseStr = "^"+e.target+"$";
+			for(int i = 0; i <= baseStr.length(); i++){
 				for(int j = 0; j <= Main.maxTransfemeSize; j++){
-					if(i+j <= e.source.length()){
-						Util.update(baseCounts, e.source.substring(i,i+j), 1.0);
+					if(i+j <= baseStr.length()){
+						Util.update(baseCounts, baseStr.substring(i,i+j), 1.0);
 					}
 				}
 			}

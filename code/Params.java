@@ -15,7 +15,12 @@ public class Params {
 		if(source.equals(target)){
 			return 0.0;
 		} else {
-			return -1.0-2.0 * StrUtils.dist(source, target);
+			/*double E = 0.0;
+			int delta = source.length() - target.length();
+			if(delta > 1){
+				//E += 1.5 * delta * (delta-1);
+			}*/
+			return -1.0-2.0 * StrUtils.dist(source, target); //- E;
 		}
 	}
 	double get(String source, String target){
@@ -45,7 +50,7 @@ public class Params {
 		LogInfo.logs("size: %d", weights.size());
     LogInfo.begin_track("Params.weights");
 		for(String index : weights.keySet()){
-			if(weights.get(index) > -2.0){
+			if(weights.get(index) > -10.0){
 				LogInfo.logs("%s: %f", index, weights.get(index));
 			}
 		}
