@@ -1,4 +1,5 @@
 import java.util.*;
+import fig.basic.LogInfo;
 public class PackedAlignment implements Comparable {
 	List<BackPointer> backpointers;
 	int order;
@@ -103,6 +104,18 @@ public class PackedAlignment implements Comparable {
     }
     return source2 + "=>" + target2;
   }
+
+	void stats(Params params){
+    String target = targetPosition.toString();
+		int old_i = 0, old_j = 0;
+		for(int p = 0; p < sourceTransfemeBoundaries.size(); p++){
+			int i = sourceTransfemeBoundaries.get(p),
+				  j = targetTransfemeBoundaries.get(p);
+			String s = source.substring(old_i, i);
+			String t = target.substring(old_j, j);
+			LogInfo.logs("score of (%s->%s): %f", s, t, params.get(s, t));
+		}
+	}
 
   @Override
   public int compareTo(Object other){

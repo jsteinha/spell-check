@@ -83,6 +83,21 @@ public class Main implements Runnable {
 			if(++counter % 100 == 0){
 				LogInfo.logs("accuracy: %s", accuracy);
 			}
+
+			// additional info about whether beam search / scoring is working
+			LogInfo.begin_track("Comparing to cheater");
+			Trie dictCheat = new Trie();
+			dictCheat.add(e.target);
+			AlignState stateCheat = Aligner.align(params, e.source, dictCheat);
+			PackedAlignment cheat = Aligner.argmax(stateCheat, params);
+			LogInfo.logs("cheater correction: %s", cheat);
+			LogInfo.begin_track("best stats");
+			best.stats(params);
+			LogInfo.end_track();
+			LogInfo.begin_track("cheater stats");
+			cheat.stats(params);
+			LogInfo.end_track();
+			LogInfo.end_track();
     }
 		LogInfo.logs("final accuracy: %s", accuracy);
 	}
