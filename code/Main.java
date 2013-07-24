@@ -11,6 +11,8 @@ public class Main implements Runnable {
 	public static int numIter = 1;
 	@Option(gloss="beam size (0 = infinite beam)")
 	public static int beamSize = 0;
+  @Option
+  public static boolean printBeam = false;
 	@Option(gloss="max transfeme size")
 	public static int maxTransfemeSize = 2;
 	@Option(gloss="maximum number of training examples")
@@ -72,6 +74,7 @@ public class Main implements Runnable {
 			}
     }
 		StatFig accuracy = new StatFig();
+    StatFig fallOffBeam = new StatFig();
 		int counter = 0;
     for(Example e : examplesTest){
       LogInfo.logs("correcting %s (target: %s)", e.source, e.target);
@@ -80,9 +83,6 @@ public class Main implements Runnable {
 			boolean correct = ("^"+e.target+"$").equals(best.targetPosition.toString());
       LogInfo.logs("best correction: %s (correct=%s)", best, correct);
 			accuracy.add(correct);
-			if(++counter % 100 == 0){
-				LogInfo.logs("accuracy: %s", accuracy);
-			}
 
 			// additional info about whether beam search / scoring is working
 			LogInfo.begin_track("Comparing to cheater");
@@ -92,13 +92,21 @@ public class Main implements Runnable {
 			PackedAlignment cheat = Aligner.argmax(stateCheat, params);
 			LogInfo.logs("cheater correction: %s", cheat);
 			LogInfo.begin_track("best stats");
-			best.stats(params);
+			double bestScore = best.score(params);
 			LogInfo.end_track();
 			LogInfo.begin_track("cheater stats");
-			cheat.stats(params);
+			double cheaterScore = cheat.score(params);
 			LogInfo.end_track();
 			LogInfo.end_track();
+      fallOffBeam.add(!correct && (cheaterScore > bestScore));
+
+      // periodically print logging output
+			if(++counter % 100 == 0){
+				LogInfo.logs("accuracy: %s", accuracy);
+        LogInfo.logs("fall off beam: %s", fallOffBeam);
+			}
     }
 		LogInfo.logs("final accuracy: %s", accuracy);
+    LogInfo.logs("final fall off beam: %s", fallOffBeam);
 	}
 }

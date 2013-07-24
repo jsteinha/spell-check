@@ -14,6 +14,10 @@ ifndef $(EVAL_NAME)
   EVAL_NAME="dev"
 endif
 
+ifndef $(PRINT_BEAM)
+  PRINT_BEAM=false
+endif
+
 prefix=../state/execs
 include=jars/guava-14.0.1.jar:jars/fig.jar
 
@@ -28,4 +32,4 @@ clean:
 	rm -f classes/$(NAME)/*.class
 
 run:
-	java -cp .:$(include):classes/$(NAME) Main -execPoolDir $(prefix)/$(NAME) -Main.experimentName $(NAME) -Main.beamSize $(BEAM_SIZE) -Main.maxTransfemeSize $(TRANSFEME_SIZE) -Main.numIter $(NUM_ITER) -Main.evalName $(EVAL_NAME)
+	java -cp .:$(include):classes/$(NAME) Main -execPoolDir $(prefix)/$(NAME) -Main.experimentName $(NAME) -Main.beamSize $(BEAM_SIZE) -Main.printBeam $(PRINT_BEAM) -Main.maxTransfemeSize $(TRANSFEME_SIZE) -Main.numIter $(NUM_ITER) -Main.evalName $(EVAL_NAME)

@@ -105,7 +105,7 @@ public class PackedAlignment implements Comparable {
     return source2 + "=>" + target2;
   }
 
-	void stats(Params params){
+	double score(Params params){
     String target = targetPosition.toString();
 		int old_i = 0, old_j = 0;
     double totalScore = 0.0, curScore;
@@ -121,6 +121,7 @@ public class PackedAlignment implements Comparable {
       totalScore += curScore;
 		}
     LogInfo.logs("total score: %f", totalScore);
+    return totalScore;
 	}
 
   @Override

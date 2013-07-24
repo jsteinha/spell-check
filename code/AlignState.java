@@ -1,4 +1,5 @@
 import java.util.*;
+import fig.basic.LogInfo;
 public class AlignState {
 	HashMap<Context, HashMap<PackedAlignment, PackedAlignment> >[] beams;
 	private int curGrade;
@@ -63,6 +64,13 @@ public class AlignState {
 		ArrayList<PackedAlignment> beamFull =
       new ArrayList<PackedAlignment>(beams[curGrade].get(c).keySet());
     Collections.sort(beamFull);
+    if(Main.printBeam){
+      LogInfo.begin_track("printBeam");
+      for(PackedAlignment pa : beamFull){
+        LogInfo.logs("%s", pa);
+      }
+      LogInfo.end_track();
+    }
     if(Main.beamSize == 0 || beamFull.size() < Main.beamSize)
       return beamFull;
     else
