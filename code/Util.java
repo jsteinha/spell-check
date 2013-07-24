@@ -1,4 +1,5 @@
 import java.util.*;
+import fig.basic.LogInfo;
 import com.google.common.hash.*;
 public class Util {
 	static HashFunction hashFunction = Hashing.goodFastHash(32);
@@ -62,7 +63,7 @@ public class Util {
 		for(String a : num.keySet()){
 			HashMap<String, Double> out_a = new HashMap<String, Double>();
 			for(String b : num.get(a).keySet()){
-				if(denom.get(b) > 10.0){ // TODO hack to avoid overfitting
+				if(denom.get(b) > 100.0){ // TODO hack to avoid overfitting
 					out_a.put(b, num.get(a).get(b)/ denom.get(b)); // TODO dividing on b is unintuitive
 				}
 				//out_a.put(b, num.get(a).get(b) / (denom.get(a)+3.0)); // TODO hack
@@ -71,6 +72,22 @@ public class Util {
 		}
 		return out;
 	}
+
+
+  static void printMap(Map m){
+    printMap(m,"");
+  }
+  static void printMap(Map m, String prefix){
+    for(Object k : m.keySet()){
+      Object v = m.get(k);
+      if(v instanceof Map){
+        printMap((Map)v, prefix+k.toString()+",");
+      }
+      else {
+        LogInfo.logs("%s%s,%s", prefix, k.toString(), v.toString());
+      }
+    }
+  }
 
 	static HashMap<String, HashMap<String, Double> > normalize(HashMap<String, HashMap<String, Double>> in){
 		HashMap<String, HashMap<String, Double> > out = new HashMap<String, HashMap<String, Double>>();

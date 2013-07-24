@@ -13,7 +13,11 @@ public class EMLearner {
       AlignState state = Aligner.align(paramsIn, e.source, localDict);
       PackedAlignment best = Aligner.argmax(state, paramsIn);
       LogInfo.logs("best correction: %s", best);
-      Util.incrMap(totalCounts, Aligner.counts(state, paramsIn));
+      HashMap<String, HashMap<String, Double>> counts = Aligner.counts(state, paramsIn);
+      /*LogInfo.begin_track("count updates");
+      Util.printMap(counts);
+      LogInfo.end_track();*/
+      Util.incrMap(totalCounts, counts); //Aligner.counts(state, paramsIn));
 			// get baseline counts
 			String baseStr = "^"+e.target+"$";
 			for(int i = 0; i <= baseStr.length(); i++){

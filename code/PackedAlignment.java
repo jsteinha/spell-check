@@ -108,13 +108,19 @@ public class PackedAlignment implements Comparable {
 	void stats(Params params){
     String target = targetPosition.toString();
 		int old_i = 0, old_j = 0;
+    double totalScore = 0.0, curScore;
 		for(int p = 0; p < sourceTransfemeBoundaries.size(); p++){
 			int i = sourceTransfemeBoundaries.get(p),
 				  j = targetTransfemeBoundaries.get(p);
 			String s = source.substring(old_i, i);
 			String t = target.substring(old_j, j);
-			LogInfo.logs("score of (%s->%s): %f", s, t, params.get(s, t));
+      curScore = params.get(s, t);
+			LogInfo.logs("score of (%s->%s): %f", s, t, curScore);
+      old_i = i;
+      old_j = j;
+      totalScore += curScore;
 		}
+    LogInfo.logs("total score: %f", totalScore);
 	}
 
   @Override
