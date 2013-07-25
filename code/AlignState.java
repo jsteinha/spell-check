@@ -64,17 +64,26 @@ public class AlignState {
 		ArrayList<PackedAlignment> beamFull =
       new ArrayList<PackedAlignment>(beams[curGrade].get(c).keySet());
     Collections.sort(beamFull);
-    if(Main.printBeam){
-      LogInfo.begin_track("printBeam");
-      for(PackedAlignment pa : beamFull){
-        LogInfo.logs("%s", pa);
-      }
-      LogInfo.end_track();
-    }
     if(Main.beamSize == 0 || beamFull.size() < Main.beamSize)
       return beamFull;
     else
       return beamFull.subList(0, Main.beamSize);
+	}
+	void printBeams(){
+    LogInfo.begin_track("printBeams");
+		for(HashMap<Context, HashMap<PackedAlignment, PackedAlignment>> grades : beams){
+			for(Context c : grades.keySet()){
+				ArrayList<PackedAlignment> beamFull = 
+					new ArrayList<PackedAlignment>(grades.get(c).keySet());
+				Collections.sort(beamFull);
+				LogInfo.begin_track("beam[%d][%c]", c.grade(), c.hashCode());
+    		for(PackedAlignment pa : beamFull){
+      		LogInfo.logs("%s: %f", pa, pa.score.totalScore);
+    		}
+				LogInfo.end_track();
+			}
+		}
+    LogInfo.end_track();
 	}
 	void reverse(){
 		// TODO maybe add checking to make sure we don't screw up the state?
@@ -83,22 +92,23 @@ public class AlignState {
 }
 
 class Context {
-	int grade;
+	int grade, hash;
 	public Context(PackedAlignment alignment){
 		grade = alignment.sourcePosition + alignment.targetPosition.depth;
+		hash = alignment.sourcePosition;
 	}
 	int grade(){
 		return grade;
 	}
 	@Override
 	public int hashCode(){
-		return grade;
+		return hash;
 	}
 	@Override
 	public boolean equals(Object that){
 		return equals((Context)that);
 	}
 	boolean equals(Context that){
-		return this.grade == that.grade;
+		return this.hashCode() == that.hashCode();
 	}
 }

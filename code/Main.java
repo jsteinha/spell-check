@@ -98,6 +98,10 @@ public class Main implements Runnable {
 			double cheaterScore = cheat.score(params);
 			LogInfo.end_track();
 			LogInfo.end_track();
+			boolean fellOffBeam = !correct && (cheaterScore > bestScore);
+			if(fellOffBeam && Main.printBeam){
+				state.printBeams();
+			}
       fallOffBeam.add(!correct && (cheaterScore > bestScore));
 
       // periodically print logging output
