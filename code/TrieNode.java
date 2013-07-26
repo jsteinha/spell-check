@@ -5,15 +5,19 @@ public class TrieNode {
 	char c;
 	int guid;
 	int depth;
-	TrieNode parent;
+	int count;
+	TrieNode parent, root;
 	public TrieNode(char c, TrieNode parent){
 		guid = GUIDCOUNT++;
 		this.c = c;
 		this.parent = parent;
+		this.root = parent == null ? this : parent.root;
 		this.depth = parent == null ? 0 : parent.depth + 1;
-		children = new TrieNode[28];
+		children = new TrieNode[29];
+		count = 0;
 	}
 	void add(String suffix){
+		count++;
 		if(suffix.length() == 0){
 			getChild('$').addFinal();
 		} else {
@@ -21,6 +25,7 @@ public class TrieNode {
 		}
 	}
 	void addFinal(){
+		count++;
 		return;
 	}
 	int getIndex(char c){
@@ -31,6 +36,8 @@ public class TrieNode {
 			index = 26;
 		} else if(c == '^'){
 			index = 27;
+		} else if(c == '*'){
+			index = 28;
 		} else {
 			throw new RuntimeException("invalid character: " + c);
 		}

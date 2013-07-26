@@ -8,6 +8,10 @@ public class Assert {
 		}
 
 	}
-
+	static void assertEquals(int i, int j){
+		if(i != j){
+			throw new RuntimeException("failed equality: " + i + ", " + j);
+		}
+	}
 
 }

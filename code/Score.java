@@ -2,9 +2,11 @@ public class Score {
     double maxScore;
     double totalScore;
 		double backward;
+		int count;
     public Score(){
       maxScore = Double.NEGATIVE_INFINITY;
       totalScore = Double.NEGATIVE_INFINITY;
+			count = 0;
 			backward = Double.NEGATIVE_INFINITY;
     }
     public Score(double maxScore, double totalScore){
@@ -18,7 +20,8 @@ public class Score {
     Score combine(Score other){
       return new Score(
           Math.max(maxScore, other.maxScore),
-          Util.logsumexp(totalScore, other.totalScore));
+          Util.logsumexp(totalScore, other.totalScore),
+					count + other.count);
     }
 		void combineBackward(Double toAdd){
 			backward = Util.logsumexp(backward, toAdd);
