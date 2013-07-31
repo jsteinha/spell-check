@@ -42,9 +42,6 @@ public class Params {
 	int modelOrder(){
 		return 1;
 	}
-  Score score(BackPointer bp){
-    return bp.predecessor.score.increment(get(bp.alpha, bp.beta));
-  }
 
 	void print(){
 		LogInfo.logs("size: %d", weights.size());

@@ -2,10 +2,11 @@ import java.util.*;
 import fig.basic.LogInfo;
 public class Aligner {
 	static AlignState align(Params params, String source, Trie dictionary){
+		AlignModel model = new AlignModel(params, source, dictionary);
 		AbstractAlignment init = new AbstractAlignment(source, 0, dictionary.root());
 
 		// HACK just assume that 99 is an upper bound on the number of grades
-		AlignState state = new AlignState(init, 99, params);
+		AlignState state = new AlignState(init, 99, model);
 
 		while(state.hasNext()){
 			ArrayList<AbstractAlignment> beam = state.next();
@@ -19,7 +20,7 @@ public class Aligner {
 						AbstractAlignment newAlignment = 
 							alignment.extend(source.substring(alignment.sourcePosition, i),
 															 alignment.targetPosition.spanTo(targetExtension),
-														   params);
+														   model);
 						state.add(newAlignment);
 					}
 				}
@@ -61,19 +62,22 @@ public class Aligner {
 		return state;
 	}*/
 
-  static AbstractAlignment argmax(AlignState state, Params params){
+  static AbstractAlignment argmax(AlignState state){
     PackedAlignment cur = state.finalState;
     LinkedList<BackPointer> backpointers = new LinkedList<BackPointer>();
     while(cur.backpointers.size() > 0){
       BackPointer best = null;
+			double bestScore = Double.NaN;
       for(BackPointer bp : cur.backpointers){
-        if(best == null || params.score(bp).maxScore > 
-                           params.score(best).maxScore){
+				double curScore = state.model.mu(bp.predecessor, bp.predecessor).maxScore
+													+ state.model.params.get(bp.alpha, bp.beta);
+				if(best == null || curScore > bestScore){
           best = bp;
+					bestScore = curScore;
         }
       }
       backpointers.addFirst(best);
-      cur = best.predecessor;
+      cur = best.predecessor.pack(state.model);
     }
     AbstractAlignment ret = state.startState;
     for(BackPointer bp : backpointers){
@@ -84,7 +88,7 @@ public class Aligner {
 
   static HashMap<String, HashMap<String, Double>> counts(AlignState state, Params params){
     HashMap<String, HashMap<String, Double>> ret = new HashMap<String, HashMap<String, Double>>();
-		if(state.finalState.score.totalScore == Double.NEGATIVE_INFINITY){
+		if(state.finalState.backpointers.size() == 0){
 			LogInfo.logs("No corrections found");
 			return new HashMap<String, HashMap<String, Double> >();
 		}
