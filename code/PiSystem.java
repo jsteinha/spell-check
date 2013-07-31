@@ -2,8 +2,8 @@ import java.util.*;
 import fig.basic.LogInfo;
 public class PiSystem<E extends TreeLike<E>> {
     Tree<E> tree;
-    public PiSystem(Model<E> model, E root){
-        tree = new Tree<E>(model, root);
+    public PiSystem(E root){
+        tree = new Tree<E>(root);
     }
     public PiSystem(Tree<E> tree){
         this.tree = tree;
@@ -43,7 +43,7 @@ public class PiSystem<E extends TreeLike<E>> {
     }
 
     static HashMap<Wrapper, Pair> memoized;
-    static <F extends TreeLike<F>> Pair<F> optimalSubtree(Tree<F> ancestor, Tree<F> subtree,
+    static <F extends TreeLike<F>> Pair<F> optimalSubtree(Model<F> model, Tree<F> ancestor, Tree<F> subtree,
                                                           int childIndex, int numPlacements){
 
         Wrapper index = new Wrapper(ancestor, subtree, childIndex, numPlacements);
@@ -54,9 +54,9 @@ public class PiSystem<E extends TreeLike<E>> {
             if(numPlacements > 0){
                 ans = optimalSubtree(ancestor, subtree, childIndex, 0);
             } else {
-                double score = ancestor.model.KL(subtree.state, subtree.state, ancestor.state);
+                double score = model.KL(subtree.state, subtree.state, ancestor.state);
                 for(Tree<F> child : subtree.children)
-                    score -= ancestor.model.KL(child.state, subtree.state, ancestor.state);
+                    score -= model.KL(child.state, subtree.state, ancestor.state);
                 ans = new Pair<F>(score, new ArrayList<F>());
             }
         } else {
@@ -90,6 +90,16 @@ public class PiSystem<E extends TreeLike<E>> {
         return ans;
     }
 
+    static <F extends TreeLike<F>> List<AbstractAlignment> prune(Model<F> model,
+                                                                 PiSystem<F> pi,
+                                                                 int size){
+        memoized = new HashMap<Wrapper, Pair>();
+        piAll.tree.makeGuids(0);
+        piAll.tree.print();
+        Pair<F> pair = optimalSubtree(model, piAll.tree, piAll.tree, 0, size);
+        return pair.list;
+    }
+
     static <F extends TreeLike<F>> List<Double> inferNew(Model<F> model,
                                                       F root, int numParticles){
         LogInfo.begin_track("PiSystem inference");
@@ -106,7 +116,7 @@ public class PiSystem<E extends TreeLike<E>> {
         memoized = new HashMap<Wrapper, Pair>();
         piAll.tree.makeGuids(0);
         piAll.tree.print();
-        Pair<F> treeAndScore = optimalSubtree(piAll.tree, piAll.tree, 0, numParticles);
+        Pair<F> treeAndScore = optimalSubtree(model, piAll.tree, piAll.tree, 0, numParticles);
         LogInfo.logs("Score after pruning: %.4f", treeAndScore.score);
         PiSystem<F> pi = new PiSystem<F>(model, root);
 				// TODO: have a global cache of state->score, so that we don't lose alignments when we 
@@ -143,21 +153,19 @@ public class PiSystem<E extends TreeLike<E>> {
 class Tree<E extends TreeLike<E>> {
     // invariant 1: y \in C(x) => y.state < x.state
     // invariant 2: y, y' \in C(x) => max(y.state,y'.state) = x.state
-    Model<E> model;
     E state;
     List<Tree<E> > children;
     int guid;
     final int size;
 
-    public Tree(Model<E> model, E state){
-        this(model, state, new ArrayList<Tree<E> >());
+    public Tree(E state){
+        this(state, new ArrayList<Tree<E> >());
     }
-    public Tree(Model<E> model, E state, List<Tree<E> > children){
+    public Tree(E state, List<Tree<E> > children){
         int size = 1;
         for(Tree<E> child : children)
             size += child.size;
         this.size = size;
-        this.model = model;
         this.state = state;
         this.children = children;
     }
@@ -186,16 +194,16 @@ class Tree<E extends TreeLike<E>> {
                 newChildren.add(this);
             }
             if(!parent.equalTo(toAdd)){
-                newChildren.add(new Tree<E>(model, toAdd));
+                newChildren.add(new Tree<E>(toAdd));
             }
-            return new Tree<E>(model, parent, newChildren);
+            return new Tree<E>(parent, newChildren);
         } else {
             for(Tree<E> c : children){
                 if(toAdd.max(c.state).lessThan(state)){
                     return setChild(c, c.add(toAdd));
                 }
             }
-            return addChild(new Tree<E>(model, toAdd));
+            return addChild(new Tree<E>(toAdd));
         }
     }
 
@@ -210,12 +218,12 @@ class Tree<E extends TreeLike<E>> {
         for(Tree<E> c : children)
             if(c != oldChild)
                 newChildren.add(c);
-        return new Tree<E>(model, state, newChildren);
+        return new Tree<E>(state, newChildren);
     }    
 
     // NOTE: it's important that the first element of this be the root
-    ArrayList<WithMass<E>> flatten(){
-        ArrayList<WithMass<E>> ret = flattenHelper();
+    ArrayList<WithMass<E>> flatten(Model<E> model){
+        ArrayList<WithMass<E>> ret = flattenHelper(model);
 				double logMassTot = Double.NEGATIVE_INFINITY;
 				for(WithMass<E> wm : ret){
 					logMassTot = Util.logPlus(logMassTot, wm.logMassLoc);
@@ -225,13 +233,13 @@ class Tree<E extends TreeLike<E>> {
 				}
 				return ret;
     }
-    ArrayList<WithMass<E>> flattenHelper(){
+    ArrayList<WithMass<E>> flattenHelper(Model<E> model){
         ArrayList<WithMass<E>> ret = new ArrayList<WithMass<E>>();
 				WithMass<E> wm = new WithMass<E>(state, model.mu(state, state));
         ret.add(wm);
         for(Tree<E> c : children){
 						wm.logMassLoc = Util.logMinus(wm.logMassLoc, model.mu(state, c.state));
-            ret.addAll(c.flattenHelper());
+            ret.addAll(c.flattenHelper(model));
 				}
         return ret;
     }

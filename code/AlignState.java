@@ -1,23 +1,24 @@
 import java.util.*;
 import fig.basic.LogInfo;
 public class AlignState {
-	HashMap<Context, HashMap<PackedAlignment, PackedAlignment> >[] beams;
+	//HashMap<Context, HashMap<PackedAlignment, PackedAlignment> >[] beams;
+	HashMap<Context, PiSystem<AbstractAlignment> >[] beams;
 	private int curGrade;
 	private LinkedList<Context> curContexts;
 	final int maxGrade;
 	int direction;
-  final PackedAlignment startState, finalState;
-	public AlignState(PackedAlignment startState, int maxGrade){
+  final AbstractAlignment startState, finalState;
+	public AlignState(AbstractAlignment startState, int maxGrade){
     this.startState = startState;
 		startState.pack();
 		startState.intern.maxScore = 0.0;
 		startState.intern.totalScore = 0.0;
 
-    this.finalState = new PackedAlignment(null, -1, null);
+    this.finalState = new AbstractAlignment(null, -1, null);
 		this.maxGrade = maxGrade;
 		beams = new HashMap[maxGrade+1];
 		for(int i = 0; i <= maxGrade; i++)
-			beams[i] = new HashMap<Context, HashMap<PackedAlignment, PackedAlignment> >();
+			beams[i] = new HashMap<Context, PiSystem<AbstractAlignment> >();
 		curContexts = new LinkedList<Context>();
 		curGrade = -1;
 		direction = 1;
@@ -34,26 +35,34 @@ public class AlignState {
 			for(BackPointer bp : alignment.pack().backpointers){
       	finalState.addBP(bp);
 			}
-			return;
+      return;
     }
 
 		Context c = new Context(alignment);
 		int grade = c.grade();
-		//HashMap<PackedAlignment, PackedAlignment> existingMap = beams[grade].get(c);
 		PiSystem<AbstractAlignment> existingMap = beams[grade].get(c);
+		//HashMap<PackedAlignment, PackedAlignment> existingMap = beams[grade].get(c);
 		}
 		if(existingMap == null){
-			existingMap = new PiSystem<AbstractAlignment>();
+      // TODO next few lines are kinda hacky, should consider making 
+      //      some variables global
+      TrieNode trieRoot = alignment.targetPosition.root;
+      String target = "^"+Strings.repeat("*", c.depth-1);
+      AbstractAlignment root = new AbstractAlignment(alignment.source,
+                                                     c.position,
+                                                     trieRoot.getExtension(target));
+			existingMap = new PiSystem<AbstractAlignment>(root);
 			//existingMap = new HashMap<PackedAlignment, PackedAlignment>();
 			beams[grade].put(c, existingMap);
 		}
-		PackedAlignment existing = existingMap.get(alignment);
+    existingMap.add(alignment);
+		/*PackedAlignment existing = existingMap.get(alignment);
 		if(existing == null){
 			// TODO might be good to put a copy instead, to avoid pointer issues
 			existingMap.put(alignment, alignment);
 		} else {
 			existing.addBPs(alignment);
-		}
+		}*/
 	}
 	private boolean okay(){
 		if(direction == 1) return curGrade <= maxGrade;
@@ -72,18 +81,22 @@ public class AlignState {
 		return okay();
 	}
   //private static int beamSize = 0;
-	List<PackedAlignment> next(){
+	ArrayList<AbstractAlignment> next(){
 		skipEmpty();
 		Context c = curContexts.removeFirst();
-		ArrayList<PackedAlignment> beamFull =
+    PiSystem<AbstractAlignment> pi = beams[curGrade].get(c);
+    PiSystem.memoized = new HashMap<Wrapp
+    ArrayList<AbstractAlignment> beam = PiSystem.prune(model, pi, Main.beamSize);
+    return beam;
+		/*ArrayList<PackedAlignment> beamFull =
       new ArrayList<PackedAlignment>(beams[curGrade].get(c).keySet());
     Collections.sort(beamFull);
     if(Main.beamSize == 0 || beamFull.size() < Main.beamSize)
       return beamFull;
     else
-      return beamFull.subList(0, Main.beamSize);
+      return beamFull.subList(0, Main.beamSize);*/
 	}
-	void printBeams(){
+	/*void printBeams(){
     LogInfo.begin_track("printBeams");
 		for(HashMap<Context, HashMap<PackedAlignment, PackedAlignment>> grades : beams){
 			for(Context c : grades.keySet()){
@@ -98,7 +111,7 @@ public class AlignState {
 			}
 		}
     LogInfo.end_track();
-	}
+	}*/
 	void reverse(){
 		// TODO maybe add checking to make sure we don't screw up the state?
 		direction = -direction;
@@ -108,7 +121,7 @@ public class AlignState {
 class Context {
 	int position, depth;
 	//int grade, hash;
-	public Context(PackedAlignment alignment){
+	public Context(AbstractAlignment alignment){
 		/*grade = alignment.sourcePosition + alignment.targetPosition.depth;
 		hash = alignment.sourcePosition;*/
 		position = alignment.sourcePosition;
