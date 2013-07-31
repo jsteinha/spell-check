@@ -35,8 +35,8 @@ public class AlignState {
 		// TODO this should be done with a pi-system
     if(alignment.sourcePosition == alignment.source.length() &&
 			 alignment.targetPosition.c == '$'){
-			for(BackPointer bp : alignment.pack().backpointers){
-      	finalState.addBP(bp, params);
+			for(BackPointer bp : alignment.pack(model).backpointers){
+      	finalState.addBP(bp);
 			}
       return;
     }

@@ -82,7 +82,7 @@ public class PiSystem<E extends TreeLike<E>> {
         return ans;
     }
 
-    static <F extends TreeLike<F>> List<F> prune(Model<F> model,
+    static <F extends TreeLike<F>> ArrayList<F> prune(Model<F> model,
                                                  PiSystem<F> pi,
                                                  int size){
         memoized = new HashMap<Wrapper, Pair>();
@@ -178,10 +178,10 @@ class Tree<E extends TreeLike<E>> {
     }
     ArrayList<WithMass<E>> flattenHelper(Model<E> model){
         ArrayList<WithMass<E>> ret = new ArrayList<WithMass<E>>();
-				WithMass<E> wm = new WithMass<E>(state, model.mu(state, state));
+				WithMass<E> wm = new WithMass<E>(state, model.mu(state, state).totalScore);
         ret.add(wm);
         for(Tree<E> c : children){
-						wm.logMassLoc = Util.logMinus(wm.logMassLoc, model.mu(state, c.state));
+						wm.logMassLoc = Util.logMinus(wm.logMassLoc, model.mu(state, c.state).totalScore);
             ret.addAll(c.flattenHelper(model));
 				}
         return ret;
