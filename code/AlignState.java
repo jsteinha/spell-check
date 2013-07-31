@@ -1,6 +1,5 @@
 import java.util.*;
 import fig.basic.LogInfo;
-import com.google.common.base.Strings;
 public class AlignState {
 	//HashMap<Context, HashMap<PackedAlignment, PackedAlignment> >[] beams;
 	HashMap<Context, PiSystem<AbstractAlignment> >[] beams;
@@ -10,19 +9,17 @@ public class AlignState {
 	int direction;
   final AbstractAlignment startState;
   final PackedAlignment finalState;
-  Params params;
-	public AlignState(AbstractAlignment startState, int maxGrade, Params params){
-    PackedAlignment.cache.clear(); // TODO: dangerous, means we can only do one 
-                                   // alignment at once
+  final AlignModel model;
+	public AlignState(AbstractAlignment startState, int maxGrade, AlignModel model){
     this.startState = startState;
 		this.maxGrade = maxGrade;
-    this.params = params;
+    this.model = model;
 
-		startState.pack();
-		startState.intern.score.maxScore = 0.0;
-		startState.intern.score.totalScore = 0.0;
+		startState.pack(model);
+		//startState.intern.score.maxScore = 0.0;
+		//startState.intern.score.totalScore = 0.0;
 
-    this.finalState = new PackedAlignment(null);
+    this.finalState = new PackedAlignment();
 		beams = new HashMap[maxGrade+1];
 		for(int i = 0; i <= maxGrade; i++)
 			beams[i] = new HashMap<Context, PiSystem<AbstractAlignment> >();
@@ -33,10 +30,9 @@ public class AlignState {
     add(startState);
 	}
 	void add(AbstractAlignment alignment){
-    if(alignment.pack().score.maxScore == Double.NEGATIVE_INFINITY){
-			return;
-		}
+		alignment.pack(model); // causes interning and backpointers to happen
 
+		// TODO this should be done with a pi-system
     if(alignment.sourcePosition == alignment.source.length() &&
 			 alignment.targetPosition.c == '$'){
 			for(BackPointer bp : alignment.pack().backpointers){
@@ -48,28 +44,15 @@ public class AlignState {
 		Context c = new Context(alignment);
 		int grade = c.grade();
 		PiSystem<AbstractAlignment> existingMap = beams[grade].get(c);
-		//HashMap<PackedAlignment, PackedAlignment> existingMap = beams[grade].get(c);
 
 		if(existingMap == null){
-      // TODO next few lines are kinda hacky, should consider making 
-      //      some variables global
-      TrieNode trieRoot = alignment.targetPosition.root;
-      String target = "^"+Strings.repeat("*", c.depth-1);
       AbstractAlignment root = new AbstractAlignment(alignment.source,
                                                      c.position,
-                                                     trieRoot.getExtension(target));
+																										 model.getRoot(alignment.targetPosition));
 			existingMap = new PiSystem<AbstractAlignment>(root);
-			//existingMap = new HashMap<PackedAlignment, PackedAlignment>();
 			beams[grade].put(c, existingMap);
 		}
     existingMap.add(alignment);
-		/*PackedAlignment existing = existingMap.get(alignment);
-		if(existing == null){
-			// TODO might be good to put a copy instead, to avoid pointer issues
-			existingMap.put(alignment, alignment);
-		} else {
-			existing.addBPs(alignment);
-		}*/
 	}
 	private boolean okay(){
 		if(direction == 1) return curGrade <= maxGrade;
@@ -87,20 +70,12 @@ public class AlignState {
 		skipEmpty();
 		return okay();
 	}
-  //private static int beamSize = 0;
 	ArrayList<AbstractAlignment> next(){
 		skipEmpty();
 		Context c = curContexts.removeFirst();
     PiSystem<AbstractAlignment> pi = beams[curGrade].get(c);
     ArrayList<AbstractAlignment> beam = PiSystem.prune(model, pi, Main.beamSize);
     return beam;
-		/*ArrayList<PackedAlignment> beamFull =
-      new ArrayList<PackedAlignment>(beams[curGrade].get(c).keySet());
-    Collections.sort(beamFull);
-    if(Main.beamSize == 0 || beamFull.size() < Main.beamSize)
-      return beamFull;
-    else
-      return beamFull.subList(0, Main.beamSize);*/
 	}
 
   void printBeams(){
@@ -132,10 +107,7 @@ public class AlignState {
 
 class Context {
 	int position, depth;
-	//int grade, hash;
 	public Context(AbstractAlignment alignment){
-		/*grade = alignment.sourcePosition + alignment.targetPosition.depth;
-		hash = alignment.sourcePosition;*/
 		position = alignment.sourcePosition;
 		depth = alignment.targetPosition.depth;
 	}

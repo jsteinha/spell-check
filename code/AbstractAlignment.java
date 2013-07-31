@@ -1,8 +1,8 @@
 import java.util.*;
 import fig.basic.LogInfo;
-public class AbstractAlignment extends TreeLike<AbstractAlignment> implements Comparable {
+public class AbstractAlignment extends TreeLike<AbstractAlignment> {
   Score score;
-	String source;
+	String source, target;
 	int sourcePosition;
 	TrieNode targetPosition;
 	public AbstractAlignment(String source,
@@ -11,10 +11,13 @@ public class AbstractAlignment extends TreeLike<AbstractAlignment> implements Co
     this.source = source;
 		this.sourcePosition = sourcePosition;
 		this.targetPosition = targetPosition;
+		// TODO currently here for convenience, may need to fix later 
+		//      for performance reasons
+		this.target = targetPosition.toString();
 	}
 	AbstractAlignment extend(String transfemeSource,
-                         String transfemeTarget,
-                         Params params){
+                           String transfemeTarget,
+                           AlignModel model){
 		int newSourcePosition = sourcePosition + transfemeSource.length();
 		// TODO kill at test time
 		Assert.assertSubstringEquals(transfemeSource,
@@ -29,20 +32,27 @@ public class AbstractAlignment extends TreeLike<AbstractAlignment> implements Co
     AbstractAlignment ret = new AbstractAlignment(source,
 															 									  newSourcePosition,
 															 									  newTargetPosition);
-    ret.pack().addBP(new BackPointer(pack(), transfemeSource, transfemeTarget),
-									   params);
+    ret.pack(model).addBP(new BackPointer(this, transfemeSource, transfemeTarget));
     return ret;
 	}
 
+	AbstractAlignment goBack(BackPointer bp){
+		int newSourcePosition = sourcePosition - bp.alpha.length();
+		TrieNode newTargetPosition = targetPosition;
+		for(int i = 0; i < bp.beta.length(); i++)
+			newTargetPosition = newTargetPosition.parent;
+		return new AbstractAlignment(source, newSourcePosition, newTargetPosition);
+	}
+
 	PackedAlignment intern = null;
-	PackedAlignment pack(){
+	PackedAlignment pack(AlignModel model){
 		if(intern != null){
 			return intern;
 		}
-		intern = PackedAlignment.cache.get(this);
+		intern = model.cache.get(this);
 		if(intern == null){
-			intern = new PackedAlignment(this);
-			PackedAlignment.cache.put(this, intern);
+			intern = new PackedAlignment();
+		  model.cache.put(this, intern);
 		}
 		return intern;
 	}
@@ -68,12 +78,6 @@ public class AbstractAlignment extends TreeLike<AbstractAlignment> implements Co
   public String toString(){
     if(source == null) return "*";
 		return source + "=>" + targetPosition.toString();
-  }
-
-  @Override
-  public int compareTo(Object other){
-    return score.totalScore > 
-					 ((PackedAlignment)other).score.totalScore ? -1 : 1;
   }
 
 	/* implement TreeLike methods */
