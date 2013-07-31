@@ -9,7 +9,11 @@ public class AlignState {
   final PackedAlignment startState, finalState;
 	public AlignState(PackedAlignment startState, int maxGrade){
     this.startState = startState;
-    this.finalState = new PackedAlignment(null, 0, -1, null, null, null);
+		startState.pack();
+		startState.intern.maxScore = 0.0;
+		startState.intern.totalScore = 0.0;
+
+    this.finalState = new PackedAlignment(null, -1, null);
 		this.maxGrade = maxGrade;
 		beams = new HashMap[maxGrade+1];
 		for(int i = 0; i <= maxGrade; i++)
@@ -20,17 +24,27 @@ public class AlignState {
 
     add(startState);
 	}
-	void add(PackedAlignment alignment){
-    if(alignment.score.maxScore == Double.NEGATIVE_INFINITY) return;
-		Context c = new Context(alignment);
-		int grade = c.grade();
+	void add(AbstractAlignment alignment){
+    if(alignment.pack().score.maxScore == Double.NEGATIVE_INFINITY){
+			return;
+		}
+
     if(alignment.sourcePosition == alignment.source.length() &&
 			 alignment.targetPosition.c == '$'){
-      finalState.addBPs(alignment);
+			for(BackPointer bp : alignment.pack().backpointers){
+      	finalState.addBP(bp);
+			}
+			return;
     }
-		HashMap<PackedAlignment, PackedAlignment> existingMap = beams[grade].get(c);
+
+		Context c = new Context(alignment);
+		int grade = c.grade();
+		//HashMap<PackedAlignment, PackedAlignment> existingMap = beams[grade].get(c);
+		PiSystem<AbstractAlignment> existingMap = beams[grade].get(c);
+		}
 		if(existingMap == null){
-			existingMap = new HashMap<PackedAlignment, PackedAlignment>();
+			existingMap = new PiSystem<AbstractAlignment>();
+			//existingMap = new HashMap<PackedAlignment, PackedAlignment>();
 			beams[grade].put(c, existingMap);
 		}
 		PackedAlignment existing = existingMap.get(alignment);
@@ -92,17 +106,20 @@ public class AlignState {
 }
 
 class Context {
-	int grade, hash;
+	int position, depth;
+	//int grade, hash;
 	public Context(PackedAlignment alignment){
-		grade = alignment.sourcePosition + alignment.targetPosition.depth;
-		hash = alignment.sourcePosition;
+		/*grade = alignment.sourcePosition + alignment.targetPosition.depth;
+		hash = alignment.sourcePosition;*/
+		position = alignment.sourcePosition;
+		depth = alignment.targetPosition.depth;
 	}
 	int grade(){
-		return grade;
+		return position + depth;
 	}
 	@Override
 	public int hashCode(){
-		return hash;
+		return position;
 	}
 	@Override
 	public boolean equals(Object that){

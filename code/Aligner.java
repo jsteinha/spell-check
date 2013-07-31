@@ -1,7 +1,35 @@
 import java.util.*;
 import fig.basic.LogInfo;
 public class Aligner {
-	static AlignState align(Params params, String source, Trie dictionary){
+	static AlignState alignAbstract(Params params, String source, Trie dictionary){
+		AbstractAlignment init = new AbstractAlignment(source, 0, dictionary.root());
+
+		// HACK just assume that 99 is an upper bound on the number of grades
+		AlignState state = new AlignState(init, 99);
+
+		while(state.hasNext()){
+			ArrayList<AbstractAlignment> beam = state.next();
+			for(AbstractAlignment alignment : beam){
+				List<TrieNode> extensions = alignment.targetPosition.getAllExtensions(Main.maxTransfemeSize);
+				for(TrieNode targetExtension: extensions){
+					for(int i = alignment.sourcePosition; i <= source.length() && i <= alignment.sourcePosition.maxTransfemeSize; i++){
+						if(i == alignment.sourcePosition && targetExtension == alignment.targetPosition){
+							continue; // make sure we have at least one change
+						}
+						AbstractAlignment newAlignment = 
+							alignment.extend(source.substring(alignment.sourcePosition, i),
+															 alignment.targetPosition.spanTo(targetExtension),
+														   params);
+						state.add(newAlignment);
+					}
+				}
+			}
+		}
+		return state;
+	}
+
+
+	/*static AlignState align(Params params, String source, Trie dictionary){
     //source += "$"; // add end of string character
 		PackedAlignment init = new PackedAlignment(source,
                                                params.modelOrder(),
@@ -31,7 +59,7 @@ public class Aligner {
 			}
 		}
 		return state;
-	}
+	}*/
 
   static PackedAlignment argmax(AlignState state, Params params){
     PackedAlignment cur = state.finalState;
