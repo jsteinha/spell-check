@@ -11,28 +11,22 @@ public class PiSystem<E extends TreeLike<E>> {
     void add(E toAdd){
         tree = tree.add(toAdd);
     }
+
     List<E> getRefinements(){
-        List<E> currentStates = tree.flatten();
-        List<E> refinements = new LinkedList<E>();
-        for(E state : currentStates)
-            refinements.addAll(state.getRefinements());
+        List<WithMass<E>> currentStates = tree.flatten();
+        List<E> refinements = new ArrayList<E>();
+        for(WithMass<E> state : currentStates)
+            refinements.addAll(state.particle.getRefinements());
         return refinements;
     }
-    double score(){
-        return tree.score();
-    }
-    double scoreToAdd(E toAdd){
-        Tree<E> newTree = tree.add(toAdd);
-        return newTree.score();
-    }
 
-    private static <F extends TreeLike<F>> double scoreParticles(List<F> particles,
+    private static <F extends TreeLike<F>> double scoreParticles(List<WithMass<F>> particles,
                                                                  Model<F> model){
         LogInfo.begin_track("Computing score against model");
         double score = 0.0, mass = 0.0;
-        for(F particle : particles){
-            double particleScore = model.score(particle),
-                   particleMass  = Math.exp(particle.getLogMassLoc());
+        for(WithMass<F> particle : particles){
+            double particleScore = model.score(particle.particle),
+                   particleMass  = Math.exp(particle.logMassLoc);
             if(!Double.isNaN(particleScore)){
                 mass += particleMass;
                 score += particleScore * particleMass;
@@ -52,8 +46,6 @@ public class PiSystem<E extends TreeLike<E>> {
     static <F extends TreeLike<F>> Pair<F> optimalSubtree(Tree<F> ancestor, Tree<F> subtree,
                                                           int childIndex, int numPlacements){
 
-        //if(k < 0) return new Pair<F>(Double.POSITIVE_INFINITY, null);
-        //if(k >= subtree.size()) return new Pair<F>(0.0, subtree.flatten());
         Wrapper index = new Wrapper(ancestor, subtree, childIndex, numPlacements);
         Pair<F> ans = memoized.get(index);
         if(ans != null) return ans;
@@ -94,7 +86,6 @@ public class PiSystem<E extends TreeLike<E>> {
                 }
             }
         }
-        //LogInfo.logs("DP[%s] = %f", index, ans.score);
         memoized.put(index, ans);
         return ans;
     }
@@ -104,7 +95,7 @@ public class PiSystem<E extends TreeLike<E>> {
         LogInfo.begin_track("PiSystem inference");
         int T = model.T();
         model.init_t();
-        List<Double> ret = new LinkedList<Double>();
+        List<Double> ret = new ArrayList<Double>();
 
         LogInfo.begin_track("t=0");
         PiSystem<F> piAll = new PiSystem<F>(model, root);
@@ -118,6 +109,8 @@ public class PiSystem<E extends TreeLike<E>> {
         Pair<F> treeAndScore = optimalSubtree(piAll.tree, piAll.tree, 0, numParticles);
         LogInfo.logs("Score after pruning: %.4f", treeAndScore.score);
         PiSystem<F> pi = new PiSystem<F>(model, root);
+				// TODO: have a global cache of state->score, so that we don't lose alignments when we 
+				// 			 rebuild the tree
         for(F state : treeAndScore.list)
             pi.add(state);
         pi.tree.print();
@@ -145,70 +138,6 @@ public class PiSystem<E extends TreeLike<E>> {
         LogInfo.end_track();
         return ret;
     }
-
-    static <F extends TreeLike<F>> List<Double> infer(Model<F> model,
-                                                      F root, int numParticles){
-        LogInfo.begin_track("PiSystem inference");
-        int T = model.T();
-        model.init_t();
-        List<Double> ret = new LinkedList<Double>();
-
-        LogInfo.begin_track("t=0");
-        PiSystem<F> pi = new PiSystem<F>(model, root);
-        for(F state : root.initStates()){
-            pi.add(state);
-        }
-        pi.tree.print();
-        ret.add(scoreParticles(pi.tree.flatten(), model));
-        LogInfo.end_track();        
-
-        for(int t = 1; t < T; t++){
-            LogInfo.begin_track("t=%d", t);
-            model.increment_t();
-            LogInfo.logs("Score before refining: %f", pi.score());
-            root = root.nextRoot();
-            List<F> proposalsWithoutMass = pi.getRefinements();
-
-            // compute mass of all refinements
-            PiSystem<F> piAll = new PiSystem<F>(model, root);
-            for(F state : proposalsWithoutMass)
-                piAll.add(state);
-            LogInfo.logs("Score after refining: %f", piAll.score());
-            List<F> proposals = new LinkedList<F>();
-            for(F state : piAll.tree.flatten())
-                if(state.getLogMassTot() > Double.NEGATIVE_INFINITY)
-                    proposals.add(state);
-            ret.add(scoreParticles(proposals, model));
-            
-            // NOTE: proposals.remove(0) needs to return the root
-            // we can't defer this until later because it messes up 
-            // massTot otherwise
-            PiSystem<F> piNew = new PiSystem<F>(model, proposals.remove(0));
-            int numAdded = 1;
-            while(numAdded < numParticles && proposals.size() > 0){
-                int index = 0, bestIndex = -1;
-                double curScore = piNew.score();
-                double bestScore = Double.NEGATIVE_INFINITY;
-                for(F state : proposals){
-                    double score = piNew.scoreToAdd(state);
-                    if(bestIndex == -1 || score > bestScore){
-                        bestIndex = index;
-                        bestScore = score;
-                    }
-                    index++;
-                }
-                F toAdd = proposals.remove(bestIndex);
-                piNew.add(toAdd);
-                numAdded++;
-            }
-            LogInfo.logs("Score after pruning: %f", piNew.score());
-            piNew.tree.print();
-            pi = piNew;
-            LogInfo.end_track();
-        }
-        LogInfo.end_track();
-        return ret;
-    }
 }
 
 class Tree<E extends TreeLike<E>> {
@@ -219,11 +148,9 @@ class Tree<E extends TreeLike<E>> {
     List<Tree<E> > children;
     int guid;
     final int size;
-    final static double EPS = 1e-3;
-    private double logSizeLoc, logSizeTot, logMassLoc, logMassTot, score;
 
     public Tree(Model<E> model, E state){
-        this(model, state, new LinkedList<Tree<E> >());
+        this(model, state, new ArrayList<Tree<E> >());
     }
     public Tree(Model<E> model, E state, List<Tree<E> > children){
         int size = 1;
@@ -233,45 +160,6 @@ class Tree<E extends TreeLike<E>> {
         this.model = model;
         this.state = state;
         this.children = children;
-        // TODO fix this documentation
-        // keep track of:
-        //   logSizeTot: log(# of elements in state) (including children)
-        //   logSizeLoc: log(# of elements in state) (excluding children)
-        //   logMassTot: log(mass of state) (including children)
-        //   logMassLoc: log(mass of state) (excluding children)
-        //   score: score for this subtree
-        if(model != null){
-            boolean cached = state.massIsCached();
-            logSizeTot = state.logSize();
-            logSizeLoc = logSizeTot;
-            if(!cached){
-                logMassLoc = model.mu(state, state);
-                logMassTot = Double.NEGATIVE_INFINITY;
-            } else {
-                logMassTot = state.getLogMassTot();
-                logMassLoc = logMassTot;
-            }
-            score = 0.0;
-
-            for(Tree<E> c : children){
-                logSizeLoc = Util.logMinus(logSizeLoc, c.logSizeTot);
-                if(!cached){
-                    logMassLoc = Util.logMinus(logMassLoc, model.mu(state, c.state));
-                    logMassTot = Util.logPlus(logMassTot, c.logMassTot);
-                } else {
-                    logMassLoc = Util.logMinus(logMassLoc, c.logMassTot);
-                }
-                score += c.score;
-            }
-            if(logSizeLoc < -0.01){
-                logMassLoc = Double.NEGATIVE_INFINITY;
-                logSizeLoc = Double.NEGATIVE_INFINITY;
-            }
-            if(!cached)
-                logMassTot = Util.logPlus(logMassTot, logMassLoc);
-            if(logMassLoc > Double.NEGATIVE_INFINITY)
-                score += Math.exp(logMassLoc) * (logMassLoc - logSizeLoc);
-        }
     }
 
     int makeGuids(int index){
@@ -287,15 +175,10 @@ class Tree<E extends TreeLike<E>> {
         return children.size();
     }
 
-    // TODO double-check this formula
-    double score(){
-        if(model == null) throw new RuntimeException("no model detected");
-        else return score*Math.exp(-logMassTot) - logMassTot;
-    }
-
     Tree<E> add(E toAdd){
         if(toAdd.equalTo(state)){ // then we can stop here
             //but we might need to update the mass
+						//TODO global state cache so we don't have to worry about this
             if(toAdd.massIsCached())
                 return setMass(toAdd);
             else
@@ -303,10 +186,11 @@ class Tree<E extends TreeLike<E>> {
         }
         else if(!toAdd.lessThan(state)){
             E parent = state.max(toAdd);
-            List<Tree<E> > newChildren = new LinkedList<Tree<E> >();
+            List<Tree<E> > newChildren = new ArrayList<Tree<E> >();
             if(!parent.equalTo(state)){
                 newChildren.add(this);
             } else {
+								//TODO figure out what this is doing and possible roll into global cache
                 if(state.massIsCached())
                     parent.setLogMass(state.getLogMassLoc(),
                                       state.getLogMassTot());
@@ -314,6 +198,7 @@ class Tree<E extends TreeLike<E>> {
             if(!parent.equalTo(toAdd)){
                 newChildren.add(new Tree<E>(model, toAdd));
             } else {
+								//TODO figure out what this is doing and possible roll into global cache
                 if(toAdd.massIsCached())
                     parent.setLogMass(toAdd.getLogMassLoc(),
                                       toAdd.getLogMassTot());
@@ -329,19 +214,13 @@ class Tree<E extends TreeLike<E>> {
         }
     }
 
-    private Tree<E> setMass(E toCopy){
-        E newState = state.max(state); // TODO kind of hacky
-        newState.setLogMass(toCopy.getLogMassLoc(), toCopy.getLogMassTot());
-        return new Tree<E>(model, newState, children);
-    }
-
     private Tree<E> addChild(Tree<E> newChild){
         return setChild(null, newChild);
     }
 
     // NOTE: oldChild passed by pointer!
     private Tree<E> setChild(Tree<E> oldChild, Tree<E> newChild){
-        List<Tree<E>> newChildren = new LinkedList<Tree<E>>();
+        List<Tree<E>> newChildren = new ArrayList<Tree<E>>();
         newChildren.add(newChild);
         for(Tree<E> c : children)
             if(c != oldChild)
@@ -350,30 +229,37 @@ class Tree<E extends TreeLike<E>> {
     }    
 
     // NOTE: it's important that the first element of this be the root
-    LinkedList<E> flatten(){
-        return flattenHelper(logMassTot);
+    ArrayList<WithMass<E>> flatten(){
+        ArrayList<WithMass<E>> ret = flattenHelper();
+				double logMassTot = Double.NEGATIVE_INFINITY;
+				for(WithMass<E> wm : ret){
+					logMassTot = Util.logPlus(logMassTot, wm.logMassLoc);
+				}
+				for(WithMass<E> wm : ret){
+					wm.logMassLoc -= logMassTot;
+				}
+				return ret;
     }
-    LinkedList<E> flattenHelper(double Z){
-        LinkedList<E> ret = new LinkedList<E>();
-        state.setLogMass(logMassLoc - Z, logMassTot - Z);
-        ret.add(state);
-        for(Tree<E> c : children)
-            ret.addAll(c.flattenHelper(Z));
+    ArrayList<WithMass<E>> flattenHelper(){
+        ArrayList<WithMass<E>> ret = new ArrayList<WithMass<E>>();
+				WithMass<E> wm = new WithMass<E>(state, model.mu(state, state));
+        ret.add(wm);
+        for(Tree<E> c : children){
+						wm.logMassLoc = Util.logMinus(wm.logMassLoc, model.mu(state, c.state));
+            ret.addAll(c.flattenHelper());
+				}
         return ret;
     }
 
     void print(){
         LogInfo.begin_track("Printing tree");
-        print(null, Double.NaN);
+        print(null);
         LogInfo.end_track();
     }
-    void print(E previous, double Z){
-        if(previous == null) Z = logMassTot;
-        LogInfo.logs("%s, (mass=%.3f, logMass=%.3f)",
-            state.toString(previous),
-            Math.exp(logMassLoc-Z), logMassLoc-Z);
+    void print(E previous){
+        LogInfo.logs("%s", state);
         for(Tree<E> c : children)
-            c.print(state, Z);
+            c.print(state);
     }
 }
 

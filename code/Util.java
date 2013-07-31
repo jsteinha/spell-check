@@ -129,4 +129,28 @@ public class Util {
 		if(x <= 0) return Double.NEGATIVE_INFINITY;
 		else return Math.log(x);
 	}
+
+
+  static double logPlus(double a, double b){
+      if(a > b)
+          return a + Math.log(1 + Math.exp(b-a));
+      else if(a == Double.NEGATIVE_INFINITY)
+          return b;
+      else
+          return b + Math.log(1 + Math.exp(a-b));
+  }
+
+  private static final double EPS = 1e-4;
+  static double logMinus(double a, double b){
+      if(a > b)
+          return a + Math.log(1 - Math.exp(b-a));
+      else if(a < b - EPS){
+          LogInfo.logs("WARNING: tried to subtract exp(%f) from exp(%f)", b, a);
+          return Double.NEGATIVE_INFINITY;
+          //throw new RuntimeException("tried to subtract exp("+b+") from exp("+a+")");
+      }
+      else
+          return Double.NEGATIVE_INFINITY;
+  }
+
 }

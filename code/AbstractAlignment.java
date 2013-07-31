@@ -1,66 +1,57 @@
 import java.util.*;
 import fig.basic.LogInfo;
 public class AbstractAlignment implements Comparable extends TreeLike<AbstractAlignment> {
-	List<BackPointer> backpointers;
-
-	// information for DP state
   Score score;
 	String source;
 	int sourcePosition;
 	TrieNode targetPosition;
 	public AbstractAlignment(String source,
-                           int order,
 												   int sourcePosition,
 												   TrieNode targetPosition,
     this.source = source;
 		this.sourcePosition = sourcePosition;
 		this.targetPosition = targetPosition;
-		backpointers = new LinkedList<BackPointer>();
-    score = new Score();
-		score.count = targetPosition.count;
 	}
-	void addBP(BackPointer bp, Params params){
-      backpointers.add(bp);
-      if(params != null){
-        Score curScore = params.score(bp);
-        score = score.combine(curScore);
-      }
-	}
-	void addBPs(PackedAlignment other){
-		backpointers.addAll(other.backpointers);
-    score = score.combine(other.score);
-	}
-	PackedAlignment extend(String transfemeSource,
+	AbstractAlignment extend(String transfemeSource,
                          String transfemeTarget,
                          Params params){
-		int newSourcePosition = sourcePosition + 
-														transfemeSource.length();
+		int newSourcePosition = sourcePosition + transfemeSource.length();
+		// TODO kill at test time
 		Assert.assertSubstringEquals(transfemeSource,
 																 source,
 																 sourcePosition,
 																 newSourcePosition);
 		
-		TrieNode newTargetPosition = 
-			targetPosition.getExtension(transfemeTarget);
+		TrieNode newTargetPosition = targetPosition.getExtension(transfemeTarget);
+		//TODO kill at test time
 		Assert.assertNonNull(newTargetPosition);
 		
-    PackedAlignment ret = new PackedAlignment(
-                               source,
-															 this.order,
-															 newSourcePosition,
-															 newTargetPosition);
-    ret.addBP(new BackPointer(this,
-															transfemeSource,
-															transfemeTarget),
-							params);
+    AbstractAlignment ret = new AbstractAlignment(source,
+															 									  newSourcePosition,
+															 									  newTargetPosition);
+    ret.pack().addBP(new BackPointer(pack(), transfemeSource, transfemeTarget),
+									   params);
     return ret;
+	}
+
+	PackedAlignment intern = null;
+	PackedAlignment pack(){
+		if(intern != null){
+			return intern;
+		}
+		intern = PackedAlignment.cache.get(this);
+		if(intern == null){
+			intern = new PackedAlignment(this);
+			PackedAlignment.cache.put(this, intern);
+		}
+		return intern;
 	}
 
 	@Override
 	public boolean equals(Object that){
-		return this.equals((PackedAlignment)that);
+		return this.equals((AbstractAlignment)that);
 	}
-	boolean equals(PackedAlignment that){
+	boolean equals(AbstractAlignment that){
 		return this.sourcePosition == that.sourcePosition &&
 					 this.targetPosition == that.targetPosition;
 	}
@@ -110,10 +101,12 @@ public class AbstractAlignment implements Comparable extends TreeLike<AbstractAl
 																 maxTargetPosition);
 	}
 
+	/*@Override
 	public double logSize(){
 		return Math.log(score.count);
-	}
+	}*/
 
+	@Override
 	public boolean lessThan(AbstractAlignment rhs){
 		String lhsTarget = targetPosition.toString(),
 					 rhsTarget = rhs.targetPosition.toString();
@@ -126,6 +119,7 @@ public class AbstractAlignment implements Comparable extends TreeLike<AbstractAl
 		return false;
 	}
 
+	@Override
 	public boolean equalTo(AbstractAlignment rhs){
 		String lhsTarget = targetPosition.toString(),
 					 rhsTarget = rhs.targetPosition.toString();
@@ -133,8 +127,5 @@ public class AbstractAlignment implements Comparable extends TreeLike<AbstractAl
 		return lhsTarget.equals(rhsTarget);
 	}
 
-	public String toString(AbstractAlignment rhs){
-
-	}
 }
 
