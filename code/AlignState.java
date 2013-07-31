@@ -8,11 +8,10 @@ public class AlignState {
 	private LinkedList<Context> curContexts;
 	final int maxGrade;
 	int direction;
-  final AbstractAlignment startState, finalState;
+  final PackedAlignment finalState;
 	public AlignState(AbstractAlignment startState, int maxGrade){
     PackedAlignment.cache.clear(); // TODO: dangerous, means we can only do one 
                                    // alignment at once
-    this.startState = startState;
 		startState.pack();
 		startState.intern.score.maxScore = 0.0;
 		startState.intern.score.totalScore = 0.0;
