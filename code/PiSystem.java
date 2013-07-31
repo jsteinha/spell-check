@@ -177,31 +177,16 @@ class Tree<E extends TreeLike<E>> {
 
     Tree<E> add(E toAdd){
         if(toAdd.equalTo(state)){ // then we can stop here
-            //but we might need to update the mass
-						//TODO global state cache so we don't have to worry about this
-            if(toAdd.massIsCached())
-                return setMass(toAdd);
-            else
-                return this;
+            return this;
         }
         else if(!toAdd.lessThan(state)){
             E parent = state.max(toAdd);
             List<Tree<E> > newChildren = new ArrayList<Tree<E> >();
             if(!parent.equalTo(state)){
                 newChildren.add(this);
-            } else {
-								//TODO figure out what this is doing and possible roll into global cache
-                if(state.massIsCached())
-                    parent.setLogMass(state.getLogMassLoc(),
-                                      state.getLogMassTot());
             }
             if(!parent.equalTo(toAdd)){
                 newChildren.add(new Tree<E>(model, toAdd));
-            } else {
-								//TODO figure out what this is doing and possible roll into global cache
-                if(toAdd.massIsCached())
-                    parent.setLogMass(toAdd.getLogMassLoc(),
-                                      toAdd.getLogMassTot());
             }
             return new Tree<E>(model, parent, newChildren);
         } else {
