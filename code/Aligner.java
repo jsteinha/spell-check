@@ -5,7 +5,7 @@ public class Aligner {
 		AbstractAlignment init = new AbstractAlignment(source, 0, dictionary.root());
 
 		// HACK just assume that 99 is an upper bound on the number of grades
-		AlignState state = new AlignState(init, 99);
+		AlignState state = new AlignState(init, 99, params);
 
 		while(state.hasNext()){
 			ArrayList<AbstractAlignment> beam = state.next();
@@ -62,7 +62,7 @@ public class Aligner {
 	}*/
 
   static AbstractAlignment argmax(AlignState state, Params params){
-    AbstractAlignment cur = state.finalState;
+    PackedAlignment cur = state.finalState;
     LinkedList<BackPointer> backpointers = new LinkedList<BackPointer>();
     while(cur.backpointers.size() > 0){
       BackPointer best = null;
@@ -93,15 +93,20 @@ public class Aligner {
     state.reverse(); // reverse ordering
     boolean initialized = false;
 		while(!initialized || state.hasNext()){
-			List<AbstractAlignment> beam;
+			List<PackedAlignment> beam;
       if(initialized){
-        beam = state.next(); // TODO should not truncate here
+        List<AbstractAlignment> beamTmp = state.next();
+        beam = new ArrayList<PackedAlignment>();
+        for(AbstractAlignment alignment : beamTmp){
+          beam.add(alignment.pack());
+        }
+        //beam = state.next(); // TODO should not truncate here
       } else {
         initialized = true;
-        beam = new ArrayList<AbstractAlignment>();
+        beam = new ArrayList<PackedAlignment>();
         beam.add(state.finalState);
       }
-			for(AbstractAlignment alignment : beam){
+			for(PackedAlignment alignment : beam){
         if(alignment.score.backward == Double.NEGATIVE_INFINITY) continue;
         for(BackPointer bp : alignment.backpointers){
 					Double backward = alignment.score.backward + params.get(bp.alpha, bp.beta);

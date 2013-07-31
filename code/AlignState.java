@@ -8,16 +8,21 @@ public class AlignState {
 	private LinkedList<Context> curContexts;
 	final int maxGrade;
 	int direction;
+  final AbstractAlignment startState;
   final PackedAlignment finalState;
-	public AlignState(AbstractAlignment startState, int maxGrade){
+  Params params;
+	public AlignState(AbstractAlignment startState, int maxGrade, Params params){
     PackedAlignment.cache.clear(); // TODO: dangerous, means we can only do one 
                                    // alignment at once
+    this.startState = startState;
+		this.maxGrade = maxGrade;
+    this.params = params;
+
 		startState.pack();
 		startState.intern.score.maxScore = 0.0;
 		startState.intern.score.totalScore = 0.0;
 
-    this.finalState = new AbstractAlignment(null, -1, null);
-		this.maxGrade = maxGrade;
+    this.finalState = new PackedAlignment(null);
 		beams = new HashMap[maxGrade+1];
 		for(int i = 0; i <= maxGrade; i++)
 			beams[i] = new HashMap<Context, PiSystem<AbstractAlignment> >();
@@ -35,7 +40,7 @@ public class AlignState {
     if(alignment.sourcePosition == alignment.source.length() &&
 			 alignment.targetPosition.c == '$'){
 			for(BackPointer bp : alignment.pack().backpointers){
-      	finalState.addBP(bp);
+      	finalState.addBP(bp, params);
 			}
       return;
     }

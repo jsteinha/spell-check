@@ -18,7 +18,11 @@ public class PackedAlignment {
 
 		backpointers = new LinkedList<BackPointer>();
 		score = new Score();
-		score.count = instance.targetPosition.count;
+    if(instance != null){
+		  score.count = instance.targetPosition.count;
+    } else {
+      score.count = -1;
+    }
 	}
 	void addBP(BackPointer bp, Params params){
       backpointers.add(bp);
