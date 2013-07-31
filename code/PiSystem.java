@@ -12,14 +12,6 @@ public class PiSystem<E extends TreeLike<E>> {
         tree = tree.add(toAdd);
     }
 
-    List<E> getRefinements(){
-        List<WithMass<E>> currentStates = tree.flatten();
-        List<E> refinements = new ArrayList<E>();
-        for(WithMass<E> state : currentStates)
-            refinements.addAll(state.particle.getRefinements());
-        return refinements;
-    }
-
     private static <F extends TreeLike<F>> double scoreParticles(List<WithMass<F>> particles,
                                                                  Model<F> model){
         LogInfo.begin_track("Computing score against model");
@@ -52,7 +44,7 @@ public class PiSystem<E extends TreeLike<E>> {
         else ans = new Pair<F>(Double.POSITIVE_INFINITY, null);
         if(childIndex == subtree.numChildren()){
             if(numPlacements > 0){
-                ans = optimalSubtree(ancestor, subtree, childIndex, 0);
+                ans = optimalSubtree(model, ancestor, subtree, childIndex, 0);
             } else {
                 double score = model.KL(subtree.state, subtree.state, ancestor.state);
                 for(Tree<F> child : subtree.children)
@@ -63,8 +55,8 @@ public class PiSystem<E extends TreeLike<E>> {
             Tree<F> child = subtree.children.get(childIndex);
             int maxPlacements = Math.min(numPlacements, child.size());
             for(int i = 0; i <= numPlacements; i++){
-                Pair<F> ansChild = optimalSubtree(ancestor, child, 0, i);
-                Pair<F> ansRest = optimalSubtree(ancestor, subtree, childIndex+1, numPlacements-i);
+                Pair<F> ansChild = optimalSubtree(model, ancestor, child, 0, i);
+                Pair<F> ansRest = optimalSubtree(model, ancestor, subtree, childIndex+1, numPlacements-i);
                 if(ansChild.score + ansRest.score < ans.score){
                     double ansScore = ansChild.score + ansRest.score;
                     ArrayList<F> ansList = new ArrayList<F>();
@@ -73,8 +65,8 @@ public class PiSystem<E extends TreeLike<E>> {
                     ans = new Pair<F>(ansScore, ansList);
                 }
                 if(i < numPlacements){
-                    Pair<F> ansChild2 = optimalSubtree(child, child, 0, i);
-                    Pair<F> ansRest2 = optimalSubtree(ancestor, subtree, childIndex+1, numPlacements-i-1);
+                    Pair<F> ansChild2 = optimalSubtree(model, child, child, 0, i);
+                    Pair<F> ansRest2 = optimalSubtree(model, ancestor, subtree, childIndex+1, numPlacements-i-1);
                     if(ansChild2.score + ansRest2.score < ans.score){
                         double ansScore = ansChild2.score + ansRest2.score;
                         ArrayList<F> ansList = new ArrayList<F>();
@@ -90,63 +82,14 @@ public class PiSystem<E extends TreeLike<E>> {
         return ans;
     }
 
-    static <F extends TreeLike<F>> List<AbstractAlignment> prune(Model<F> model,
-                                                                 PiSystem<F> pi,
-                                                                 int size){
+    static <F extends TreeLike<F>> List<F> prune(Model<F> model,
+                                                 PiSystem<F> pi,
+                                                 int size){
         memoized = new HashMap<Wrapper, Pair>();
-        piAll.tree.makeGuids(0);
-        piAll.tree.print();
-        Pair<F> pair = optimalSubtree(model, piAll.tree, piAll.tree, 0, size);
-        return pair.list;
-    }
-
-    static <F extends TreeLike<F>> List<Double> inferNew(Model<F> model,
-                                                      F root, int numParticles){
-        LogInfo.begin_track("PiSystem inference");
-        int T = model.T();
-        model.init_t();
-        List<Double> ret = new ArrayList<Double>();
-
-        LogInfo.begin_track("t=0");
-        PiSystem<F> piAll = new PiSystem<F>(model, root);
-        for(F state : root.initStates()){
-            piAll.add(state);
-        }
-        ret.add(scoreParticles(piAll.tree.flatten(), model));
-        memoized = new HashMap<Wrapper, Pair>();
-        piAll.tree.makeGuids(0);
-        piAll.tree.print();
-        Pair<F> treeAndScore = optimalSubtree(model, piAll.tree, piAll.tree, 0, numParticles);
-        LogInfo.logs("Score after pruning: %.4f", treeAndScore.score);
-        PiSystem<F> pi = new PiSystem<F>(model, root);
-				// TODO: have a global cache of state->score, so that we don't lose alignments when we 
-				// 			 rebuild the tree
-        for(F state : treeAndScore.list)
-            pi.add(state);
+        pi.tree.makeGuids(0);
         pi.tree.print();
-        LogInfo.end_track();
-
-        for(int t = 1; t < T; t++){
-            LogInfo.begin_track("t=%d", t);
-            model.increment_t();
-            root = root.nextRoot();
-            piAll = new PiSystem<F>(model, root);
-            for(F state : pi.getRefinements())
-                piAll.add(state);
-            ret.add(scoreParticles(piAll.tree.flatten(), model));
-            memoized = new HashMap<Wrapper, Pair>();
-            piAll.tree.makeGuids(0);
-            piAll.tree.print();
-            treeAndScore = optimalSubtree(piAll.tree, piAll.tree, 0, numParticles);
-            pi = new PiSystem<F>(model, root);
-            for(F state : treeAndScore.list)
-                pi.add(state);
-            LogInfo.logs("Score after pruning: %.4f", treeAndScore.score);
-            pi.tree.print();
-            LogInfo.end_track();
-        }
-        LogInfo.end_track();
-        return ret;
+        Pair<F> pair = optimalSubtree(model, pi.tree, pi.tree, 0, size);
+        return pair.list;
     }
 }
 

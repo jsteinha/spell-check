@@ -1,7 +1,7 @@
 import java.util.*;
 import fig.basic.LogInfo;
 public class Aligner {
-	static AlignState alignAbstract(Params params, String source, Trie dictionary){
+	static AlignState align(Params params, String source, Trie dictionary){
 		AbstractAlignment init = new AbstractAlignment(source, 0, dictionary.root());
 
 		// HACK just assume that 99 is an upper bound on the number of grades
@@ -12,7 +12,7 @@ public class Aligner {
 			for(AbstractAlignment alignment : beam){
 				List<TrieNode> extensions = alignment.targetPosition.getAllExtensions(Main.maxTransfemeSize);
 				for(TrieNode targetExtension: extensions){
-					for(int i = alignment.sourcePosition; i <= source.length() && i <= alignment.sourcePosition.maxTransfemeSize; i++){
+					for(int i = alignment.sourcePosition; i <= source.length() && i <= alignment.sourcePosition+Main.maxTransfemeSize; i++){
 						if(i == alignment.sourcePosition && targetExtension == alignment.targetPosition){
 							continue; // make sure we have at least one change
 						}
@@ -61,8 +61,8 @@ public class Aligner {
 		return state;
 	}*/
 
-  static PackedAlignment argmax(AlignState state, Params params){
-    PackedAlignment cur = state.finalState;
+  static AbstractAlignment argmax(AlignState state, Params params){
+    AbstractAlignment cur = state.finalState;
     LinkedList<BackPointer> backpointers = new LinkedList<BackPointer>();
     while(cur.backpointers.size() > 0){
       BackPointer best = null;
@@ -75,9 +75,7 @@ public class Aligner {
       backpointers.addFirst(best);
       cur = best.predecessor;
     }
-    PackedAlignment ret = state.startState;
-    ret.order = 9999; // TODO fix this, it modifies the state of 
-                      // something that might get accessed later
+    AbstractAlignment ret = state.startState;
     for(BackPointer bp : backpointers){
       ret = ret.extend(bp.alpha, bp.beta, null);
     }
@@ -95,15 +93,15 @@ public class Aligner {
     state.reverse(); // reverse ordering
     boolean initialized = false;
 		while(!initialized || state.hasNext()){
-			List<PackedAlignment> beam;
+			List<AbstractAlignment> beam;
       if(initialized){
         beam = state.next(); // TODO should not truncate here
       } else {
         initialized = true;
-        beam = new ArrayList<PackedAlignment>();
+        beam = new ArrayList<AbstractAlignment>();
         beam.add(state.finalState);
       }
-			for(PackedAlignment alignment : beam){
+			for(AbstractAlignment alignment : beam){
         if(alignment.score.backward == Double.NEGATIVE_INFINITY) continue;
         for(BackPointer bp : alignment.backpointers){
 					Double backward = alignment.score.backward + params.get(bp.alpha, bp.beta);

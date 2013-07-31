@@ -1,5 +1,6 @@
 import java.util.*;
 import fig.basic.LogInfo;
+import com.google.common.base.Strings;
 public class AlignState {
 	//HashMap<Context, HashMap<PackedAlignment, PackedAlignment> >[] beams;
 	HashMap<Context, PiSystem<AbstractAlignment> >[] beams;
@@ -9,10 +10,12 @@ public class AlignState {
 	int direction;
   final AbstractAlignment startState, finalState;
 	public AlignState(AbstractAlignment startState, int maxGrade){
+    PackedAlignment.cache.clear(); // TODO: dangerous, means we can only do one 
+                                   // alignment at once
     this.startState = startState;
 		startState.pack();
-		startState.intern.maxScore = 0.0;
-		startState.intern.totalScore = 0.0;
+		startState.intern.score.maxScore = 0.0;
+		startState.intern.score.totalScore = 0.0;
 
     this.finalState = new AbstractAlignment(null, -1, null);
 		this.maxGrade = maxGrade;
@@ -42,7 +45,7 @@ public class AlignState {
 		int grade = c.grade();
 		PiSystem<AbstractAlignment> existingMap = beams[grade].get(c);
 		//HashMap<PackedAlignment, PackedAlignment> existingMap = beams[grade].get(c);
-		}
+
 		if(existingMap == null){
       // TODO next few lines are kinda hacky, should consider making 
       //      some variables global
@@ -85,7 +88,6 @@ public class AlignState {
 		skipEmpty();
 		Context c = curContexts.removeFirst();
     PiSystem<AbstractAlignment> pi = beams[curGrade].get(c);
-    PiSystem.memoized = new HashMap<Wrapp
     ArrayList<AbstractAlignment> beam = PiSystem.prune(model, pi, Main.beamSize);
     return beam;
 		/*ArrayList<PackedAlignment> beamFull =
@@ -96,6 +98,12 @@ public class AlignState {
     else
       return beamFull.subList(0, Main.beamSize);*/
 	}
+
+  void printBeams(){
+    LogInfo.begin_track("printBeams");
+    LogInfo.logs("**NOT YET IMPLEMENTED**");
+    LogInfo.end_track();
+  }
 	/*void printBeams(){
     LogInfo.begin_track("printBeams");
 		for(HashMap<Context, HashMap<PackedAlignment, PackedAlignment>> grades : beams){

@@ -1,13 +1,13 @@
 import java.util.*;
 import fig.basic.LogInfo;
-public class AbstractAlignment implements Comparable extends TreeLike<AbstractAlignment> {
+public class AbstractAlignment extends TreeLike<AbstractAlignment> implements Comparable {
   Score score;
 	String source;
 	int sourcePosition;
 	TrieNode targetPosition;
 	public AbstractAlignment(String source,
 												   int sourcePosition,
-												   TrieNode targetPosition,
+												   TrieNode targetPosition){
     this.source = source;
 		this.sourcePosition = sourcePosition;
 		this.targetPosition = targetPosition;
@@ -96,7 +96,6 @@ public class AbstractAlignment implements Comparable extends TreeLike<AbstractAl
 		maxTarget += lhsTarget.substring(lastUnequal+1);
 		TrieNode maxTargetPosition = targetPosition.root.getExtension(maxTarget);
 		return new AbstractAlignment(source,
-																 order,
 																 sourcePosition,
 																 maxTargetPosition);
 	}

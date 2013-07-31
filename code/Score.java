@@ -14,6 +14,10 @@ public class Score {
       this.totalScore = totalScore;
 			backward = Double.NEGATIVE_INFINITY; // TODO make sure backward score also is preserved
     }
+    public Score(double maxScore, double totalScore, int count){
+      this(maxScore, totalScore);
+      this.count = count;
+    }
     Score increment(double delta){
       return new Score(maxScore + delta, totalScore + delta);
     }

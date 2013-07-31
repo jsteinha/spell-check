@@ -35,7 +35,7 @@ public class Main implements Runnable {
 	}
 
 	public void runWithException() throws Exception {
-		Scanner in = new Scanner(new File("../data/percy/train.dat"));
+		/*Scanner in = new Scanner(new File("../data/percy/train.dat"));
 		List<Example> examples = new ArrayList<Example>();
 		int count = 0;
     LogInfo.begin_track("Reading training examples");
@@ -62,8 +62,6 @@ public class Main implements Runnable {
         dictionary.add(word);
       }
     }
-    /*Scanner testS = new Scanner(new File("../data/percy/test.dat"));
-    Scanner testT = new Scanner(new File("../data/percy/test.ans"));*/
     Scanner dev = new Scanner(new File("../data/percy/"+evalName+".dat"));
     List<Example> examplesTest = new ArrayList<Example>();
     count = 0;
@@ -79,7 +77,7 @@ public class Main implements Runnable {
     for(Example e : examplesTest){
       LogInfo.logs("correcting %s (target: %s)", e.source, e.target);
       AlignState state = Aligner.align(params, e.source, dictionary);
-      PackedAlignment best = Aligner.argmax(state, params);
+      AbstractAlignment best = Aligner.argmax(state, params);
 			boolean correct = ("^"+e.target+"$").equals(best.targetPosition.toString());
       LogInfo.logs("best correction: %s (correct=%s)", best, correct);
 			accuracy.add(correct);
@@ -89,7 +87,7 @@ public class Main implements Runnable {
 			Trie dictCheat = new Trie();
 			dictCheat.add(e.target);
 			AlignState stateCheat = Aligner.align(params, e.source, dictCheat);
-			PackedAlignment cheat = Aligner.argmax(stateCheat, params);
+			AbstractAlignment cheat = Aligner.argmax(stateCheat, params);
 			LogInfo.logs("cheater correction: %s", cheat);
 			LogInfo.begin_track("best stats");
 			double bestScore = best.score(params);
@@ -111,6 +109,6 @@ public class Main implements Runnable {
 			}
     }
 		LogInfo.logs("final accuracy: %s", accuracy);
-    LogInfo.logs("final fall off beam: %s", fallOffBeam);
+    LogInfo.logs("final fall off beam: %s", fallOffBeam);*/
 	}
 }

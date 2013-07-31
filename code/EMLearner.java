@@ -11,7 +11,7 @@ public class EMLearner {
       Trie localDict = new Trie();
       localDict.add(e.target);
       AlignState state = Aligner.align(paramsIn, e.source, localDict);
-      PackedAlignment best = Aligner.argmax(state, paramsIn);
+      AbstractAlignment best = Aligner.argmax(state, paramsIn);
       LogInfo.logs("best correction: %s", best);
       HashMap<String, HashMap<String, Double>> counts = Aligner.counts(state, paramsIn);
       /*LogInfo.begin_track("count updates");
