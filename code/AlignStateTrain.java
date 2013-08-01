@@ -1,9 +1,9 @@
 import java.util.*;
 import fig.basic.LogInfo;
 public class AlignStateTrain {
-	HashMap<Context, HashMap<AlignmentTrain, AlignmentTrain> >[] beams;
+	HashMap<ContextTrain, HashMap<AlignmentTrain, AlignmentTrain> >[] beams;
 	private int curGrade;
-	private LinkedList<Context> curContexts;
+	private LinkedList<ContextTrain> curContextTrains;
 	final int maxGrade;
 	int direction;
   final AlignmentTrain startState, finalState;
@@ -13,8 +13,8 @@ public class AlignStateTrain {
 		this.maxGrade = maxGrade;
 		beams = new HashMap[maxGrade+1];
 		for(int i = 0; i <= maxGrade; i++)
-			beams[i] = new HashMap<Context, HashMap<AlignmentTrain, AlignmentTrain> >();
-		curContexts = new LinkedList<Context>();
+			beams[i] = new HashMap<ContextTrain, HashMap<AlignmentTrain, AlignmentTrain> >();
+		curContextTrains = new LinkedList<ContextTrain>();
 		curGrade = -1;
 		direction = 1;
 
@@ -22,7 +22,7 @@ public class AlignStateTrain {
 	}
 	void add(AlignmentTrain alignment){
     if(alignment.score.maxScore == Double.NEGATIVE_INFINITY) return;
-		Context c = new Context(alignment);
+		ContextTrain c = new ContextTrain(alignment);
 		int grade = c.grade();
     if(alignment.sourcePosition == alignment.source.length() &&
 			 alignment.targetPosition.c == '$'){
@@ -46,10 +46,10 @@ public class AlignStateTrain {
 		else return curGrade >= 0;
 	}
 	private void skipEmpty(){
-		while(okay() && curContexts.size() == 0){
+		while(okay() && curContextTrains.size() == 0){
 			curGrade += direction;
       if(okay()){
-			  curContexts = new LinkedList<Context>(beams[curGrade].keySet());
+			  curContextTrains = new LinkedList<ContextTrain>(beams[curGrade].keySet());
       }
 		}
 	}
@@ -60,7 +60,7 @@ public class AlignStateTrain {
   //private static int beamSize = 0;
 	List<AlignmentTrain> next(){
 		skipEmpty();
-		Context c = curContexts.removeFirst();
+		ContextTrain c = curContextTrains.removeFirst();
 		ArrayList<AlignmentTrain> beamFull =
       new ArrayList<AlignmentTrain>(beams[curGrade].get(c).keySet());
     Collections.sort(beamFull);
@@ -71,8 +71,8 @@ public class AlignStateTrain {
 	}
 	void printBeams(){
     LogInfo.begin_track("printBeams");
-		for(HashMap<Context, HashMap<AlignmentTrain, AlignmentTrain>> grades : beams){
-			for(Context c : grades.keySet()){
+		for(HashMap<ContextTrain, HashMap<AlignmentTrain, AlignmentTrain>> grades : beams){
+			for(ContextTrain c : grades.keySet()){
 				ArrayList<AlignmentTrain> beamFull = 
 					new ArrayList<AlignmentTrain>(grades.get(c).keySet());
 				Collections.sort(beamFull);
@@ -91,9 +91,9 @@ public class AlignStateTrain {
 	}
 }
 
-class Context {
+class ContextTrain {
 	int grade, hash;
-	public Context(AlignmentTrain alignment){
+	public ContextTrain(AlignmentTrain alignment){
 		grade = alignment.sourcePosition + alignment.targetPosition.depth;
 		hash = alignment.sourcePosition;
 	}
@@ -106,9 +106,9 @@ class Context {
 	}
 	@Override
 	public boolean equals(Object that){
-		return equals((Context)that);
+		return equals((ContextTrain)that);
 	}
-	boolean equals(Context that){
+	boolean equals(ContextTrain that){
 		return this.hashCode() == that.hashCode();
 	}
 }

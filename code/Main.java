@@ -78,7 +78,7 @@ public class Main implements Runnable {
     for(Example e : examplesTest){
       LogInfo.logs("correcting %s (target: %s)", e.source, e.target);
       AlignState state = Aligner.align(params, e.source, dictionary);
-      AbstractAlignment best = Aligner.argmax(state, params);
+      Alignment best = Aligner.argmax(state);
 			boolean correct = ("^"+e.target+"$").equals(best.targetPosition.toString());
       LogInfo.logs("best correction: %s (correct=%s)", best, correct);
 			accuracy.add(correct);
@@ -87,8 +87,8 @@ public class Main implements Runnable {
 			LogInfo.begin_track("Comparing to cheater");
 			Trie dictCheat = new Trie(false);
 			dictCheat.add(e.target);
-			AlignState stateCheat = Aligner.align(params, e.source, dictCheat);
-			AbstractAlignment cheat = Aligner.argmax(stateCheat, params);
+			AlignStateTrain stateCheat = AlignerTrain.align(params, e.source, dictCheat);
+		  AlignmentTrain cheat = AlignerTrain.argmax(stateCheat, params);
 			LogInfo.logs("cheater correction: %s", cheat);
 			LogInfo.begin_track("best stats");
 			double bestScore = best.score(params);
