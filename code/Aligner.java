@@ -62,7 +62,7 @@ public class Aligner {
 		return state;
 	}*/
 
-  static AbstractAlignment argmax(AlignState state){
+  static Alignment argmax(AlignState state){
 		ArrayList<WithMass<AbstractAlignment> > candidates = 
 			new ArrayList<WithMass<AbstractAlignment>>();
 		for(int i = 0; i <= state.maxGrade; i++){
