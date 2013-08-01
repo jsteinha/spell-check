@@ -166,14 +166,19 @@ class Tree<E extends TreeLike<E>> {
 
     // NOTE: it's important that the first element of this be the root
     ArrayList<WithMass<E>> flatten(Model<E> model){
+      return flatten(model, true);
+    }
+    ArrayList<WithMass<E>> flatten(Model<E> model, boolean normalize){
         ArrayList<WithMass<E>> ret = flattenHelper(model);
 				double logMassTot = Double.NEGATIVE_INFINITY;
 				for(WithMass<E> wm : ret){
 					logMassTot = Util.logPlus(logMassTot, wm.logMassLoc);
 				}
-				for(WithMass<E> wm : ret){
-					wm.logMassLoc -= logMassTot;
-				}
+        if(normalize){
+				  for(WithMass<E> wm : ret){
+				  	wm.logMassLoc -= logMassTot;
+				  }
+        }
 				return ret;
     }
     ArrayList<WithMass<E>> flattenHelper(Model<E> model){

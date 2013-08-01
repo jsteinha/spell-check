@@ -8,7 +8,8 @@ public class AlignState {
 	final int maxGrade;
 	int direction;
   final AbstractAlignment startState;
-  final PackedAlignment finalState;
+  //final PackedAlignment finalState;
+  PiSystem<AbstractAlignment>[] finalState;
   final AlignModel model;
 	public AlignState(AbstractAlignment startState, int maxGrade, AlignModel model){
     this.startState = startState;
@@ -19,7 +20,9 @@ public class AlignState {
 		//startState.intern.score.maxScore = 0.0;
 		//startState.intern.score.totalScore = 0.0;
 
-    this.finalState = new PackedAlignment();
+    //this.finalState = new PackedAlignment();
+    finalState = new PiSystem[maxGrade+1];
+
 		beams = new HashMap[maxGrade+1];
 		for(int i = 0; i <= maxGrade; i++)
 			beams[i] = new HashMap<Context, PiSystem<AbstractAlignment> >();
@@ -32,17 +35,22 @@ public class AlignState {
 	void add(AbstractAlignment alignment){
 		alignment.pack(model); // causes interning and backpointers to happen
 
+		Context c = new Context(alignment);
+		int grade = c.grade();
+
 		// TODO this should be done with a pi-system
     if(alignment.sourcePosition == alignment.source.length() &&
 			 alignment.targetPosition.c == '$'){
-			for(BackPointer bp : alignment.pack(model).backpointers){
-      	finalState.addBP(bp);
-			}
+      if(finalState[grade] == null){
+        AbstractAlignment root = new AbstractAlignment(alignment.source,
+                                                       c.position,
+                                                       model.getRoot(alignment.targetPosition));
+        finalState[grade] = new PiSystem<AbstractAlignment>(root);
+      }
+      finalState[grade].add(alignment);
       return;
     }
 
-		Context c = new Context(alignment);
-		int grade = c.grade();
 		PiSystem<AbstractAlignment> existingMap = beams[grade].get(c);
 
 		if(existingMap == null){
