@@ -1,0 +1,39 @@
+public class AlignModel implements Model<AbstractAlignment> {
+  HashMap<PackedAlignment, HashMap<PackedAlignment, Score>> muCached;
+  public AlignModel(Params params, Trie dictionary){
+    this.params = params;
+    this.dictionary = dictionary;
+    muCached = new HashMap<PackedAlignment, HashMap<PackedAlignment, Score>>();
+  }
+  private Score get(PackedAlignment a, PackedAlignment b){
+    HashMap<PackedAlignment, Score> mp = muCached.get(a);
+    if(mp == null){
+      return null;
+    } else {
+      return mp.get(b);
+    }
+  }
+  private void put(PackedAlignment a, PackedAlignment b, Score score){
+    HashMap<PackedAlignment, Score> mp = muCached.get(a);
+    if(mp == null){
+      mp = new HashMap<PackedAlignment, Score>();
+      muCached.put(a, mp);
+    }
+    mp.put(b, score);
+  }
+  double mu(AbstractAlignment a, AbstractAlignment b){
+    PackedAlignment aPacked = a.pack(),
+                    bPacked = b.pack();
+    Score cached = muCache.get(aPacked, bPacked);
+    if(cached != null){
+      return cached;
+    }
+    Score score = new Score();
+    for(BackPointer bp : bPacked.backpointers){
+      Score scoreIncr = mu
+    }
+
+  }
+
+
+}
