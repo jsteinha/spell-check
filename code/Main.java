@@ -35,7 +35,7 @@ public class Main implements Runnable {
 	}
 
 	public void runWithException() throws Exception {
-		/*Scanner in = new Scanner(new File("../data/percy/train.dat"));
+		Scanner in = new Scanner(new File("../data/percy/train.dat"));
 		List<Example> examples = new ArrayList<Example>();
 		int count = 0;
     LogInfo.begin_track("Reading training examples");
@@ -50,11 +50,12 @@ public class Main implements Runnable {
     LogInfo.end_track();
 
 		Params params = EMLearner.learn(examples);
+		params = new AbstractedParams(params);
 		LogInfo.begin_track("Final params");
 		params.print();
 		LogInfo.end_track();
 
-    Trie dictionary = new Trie();
+    Trie dictionary = new Trie(true);
     Scanner dict = new Scanner(new File("../data/percy/dict.txt"));
     while(dict.hasNext()){
       String word = dict.next().toLowerCase();
@@ -84,7 +85,7 @@ public class Main implements Runnable {
 
 			// additional info about whether beam search / scoring is working
 			LogInfo.begin_track("Comparing to cheater");
-			Trie dictCheat = new Trie();
+			Trie dictCheat = new Trie(false);
 			dictCheat.add(e.target);
 			AlignState stateCheat = Aligner.align(params, e.source, dictCheat);
 			AbstractAlignment cheat = Aligner.argmax(stateCheat, params);
@@ -109,6 +110,6 @@ public class Main implements Runnable {
 			}
     }
 		LogInfo.logs("final accuracy: %s", accuracy);
-    LogInfo.logs("final fall off beam: %s", fallOffBeam);*/
+    LogInfo.logs("final fall off beam: %s", fallOffBeam);
 	}
 }

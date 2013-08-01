@@ -8,12 +8,12 @@ public class EMLearner {
 		HashMap<String, Double> baseCounts = new HashMap<String, Double>();
     for(Example e : examples){
 			LogInfo.begin_track("Processing example[%s]", e);
-      Trie localDict = new Trie();
+      Trie localDict = new Trie(false);
       localDict.add(e.target);
-      AlignState state = Aligner.align(paramsIn, e.source, localDict);
-      AbstractAlignment best = Aligner.argmax(state, paramsIn);
+      AlignStateTrain state = AlignerTrain.align(paramsIn, e.source, localDict);
+      AlignmentTrain best = AlignerTrain.argmax(state, paramsIn);
       LogInfo.logs("best correction: %s", best);
-      HashMap<String, HashMap<String, Double>> counts = Aligner.counts(state, paramsIn);
+      HashMap<String, HashMap<String, Double>> counts = AlignerTrain.counts(state, paramsIn);
       /*LogInfo.begin_track("count updates");
       Util.printMap(counts);
       LogInfo.end_track();*/

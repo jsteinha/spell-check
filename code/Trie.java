@@ -6,13 +6,18 @@ public class Trie {
 // getExtension(String str)
 // getAllExtentions(int len)
 	TrieNode root;
-	public Trie(){
+	boolean addAbstract;
+	public Trie(boolean addAbstract){
 		root = new TrieNode('\u0000', null);
+		this.addAbstract = addAbstract;
 	}
 	void add(String str){
-		for(int i = 0; i <= str.length(); i++)
-			root.add("^"+Strings.repeat("*",i)+str.substring(i));
-		//root.add("^"+str);
+		if(addAbstract){
+			for(int i = 0; i <= str.length(); i++)
+				root.add("^"+Strings.repeat("*",i)+str.substring(i));
+		} else {
+			root.add("^"+str);
+		}
 	}
 	void print(){
 		root.print();

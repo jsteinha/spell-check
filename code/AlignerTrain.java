@@ -33,7 +33,7 @@ public class AlignerTrain {
 		return state;
 	}
 
-  /*static AlignmentTrain argmax(AlignStateTrain state, Params params){
+  static AlignmentTrain argmax(AlignStateTrain state, Params params){
     AlignmentTrain cur = state.finalState;
     LinkedList<BackPointerTrain> backpointers = new LinkedList<BackPointerTrain>();
     while(cur.backpointers.size() > 0){
@@ -54,7 +54,7 @@ public class AlignerTrain {
       ret = ret.extend(bp.alpha, bp.beta, null);
     }
     return ret;
-  }*/
+  }
 
   static HashMap<String, HashMap<String, Double>> counts(AlignStateTrain state, Params params){
     HashMap<String, HashMap<String, Double>> ret = new HashMap<String, HashMap<String, Double>>();
