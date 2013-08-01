@@ -67,7 +67,7 @@ public class Aligner {
 			new ArrayList<WithMass<AbstractAlignment>>();
 		for(int i = 0; i <= state.maxGrade; i++){
 			if(state.finalState[i] != null){
-				candidates.add(state.finalState[i].flatten(state.model, false));
+				candidates.addAll(state.finalState[i].tree.flatten(state.model, false));
 			}
 		}
 		WithMass<AbstractAlignment> best = null;
@@ -99,18 +99,33 @@ public class Aligner {
     return ret;
   }
 
+  /*
   static HashMap<String, HashMap<String, Double>> counts(AlignState state, Params params){
     HashMap<String, HashMap<String, Double>> ret = new HashMap<String, HashMap<String, Double>>();
-		if(state.finalState.backpointers.size() == 0){
+		ArrayList<WithMass<AbstractAlignment> > candidates = 
+			new ArrayList<WithMass<AbstractAlignment>>();
+		for(int i = 0; i <= state.maxGrade; i++){
+			if(state.finalState[i] != null){
+				candidates.addAll(state.finalState[i].tree.flatten(state.model, false));
+			}
+		}
+		if(candidates.size() == 0){
 			LogInfo.logs("No corrections found");
 			return new HashMap<String, HashMap<String, Double> >();
 		}
 		// make things normalize to 1.0
-    state.finalState.score.backward = -state.finalState.score.totalScore;
+		double logMassTot = Double.NEGATIVE_INFINITY;
+		for(Withmass wm : candidates){
+			logMassTot = Util.logPlus(logMassTot, wm.logMassLoc);
+		}
+		for(WithMass wm : candidates){
+			wm.logMassLoc -= logMassTot;
+		}
+
     state.reverse(); // reverse ordering
     boolean initialized = false;
 		while(!initialized || state.hasNext()){
-			List<PackedAlignment> beam;
+			List<WithMass<AbstractAlignment>> beam;
       if(initialized){
         List<AbstractAlignment> beamTmp = state.next();
         beam = new ArrayList<PackedAlignment>();
@@ -141,5 +156,6 @@ public class Aligner {
 		}
 		return ret;
 	}
+ */
 
 }
