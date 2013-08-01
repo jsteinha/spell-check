@@ -63,25 +63,38 @@ public class Aligner {
 	}*/
 
   static AbstractAlignment argmax(AlignState state){
-    PackedAlignment cur = state.finalState;
+		ArrayList<WithMass<AbstractAlignment> > candidates = 
+			new ArrayList<WithMass<AbstractAlignment>>();
+		for(int i = 0; i <= state.maxGrade; i++){
+			if(state.finalState[i] != null){
+				candidates.add(state.finalState[i].flatten(state.model, false));
+			}
+		}
+		WithMass<AbstractAlignment> best = null;
+		for(WithMass<AbstractAlignment> wm : candidates){
+			if(best == null || wm.logMassLoc > best.logMassLoc){
+				best = wm;
+			}
+		}
+		AbstractAlignment cur = best.particle;
     LinkedList<BackPointer> backpointers = new LinkedList<BackPointer>();
-    while(cur.backpointers.size() > 0){
-      BackPointer best = null;
+    while(cur.pack(state.model).backpointers.size() > 0){
+      BackPointer bestBP = null;
 			double bestScore = Double.NaN;
-      for(BackPointer bp : cur.backpointers){
+      for(BackPointer bp : cur.pack(state.model).backpointers){
 				double curScore = state.model.mu(bp.predecessor, bp.predecessor).maxScore
 													+ state.model.params.get(bp.alpha, bp.beta);
-				if(best == null || curScore > bestScore){
-          best = bp;
+				if(bestBP == null || curScore > bestScore){
+          bestBP = bp;
 					bestScore = curScore;
         }
       }
-      backpointers.addFirst(best);
-      cur = best.predecessor.pack(state.model);
+      backpointers.addFirst(bestBP);
+      cur = bestBP.predecessor;
     }
-    AbstractAlignment ret = state.startState;
+    Alignment ret = new Alignment(state.startState);
     for(BackPointer bp : backpointers){
-      ret = ret.extend(bp.alpha, bp.beta, null);
+      ret = ret.extend(bp.alpha, bp.beta);
     }
     return ret;
   }

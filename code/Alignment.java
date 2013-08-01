@@ -1,78 +1,55 @@
 import java.util.*;
 import fig.basic.LogInfo;
-public class PackedAlignment implements Comparable {
-	List<BackPointer> backpointers;
-	int order;
-
-	// information for DP state
-  Score score;
+public class Alignment {
 	String source;
 	int sourcePosition;
 	TrieNode targetPosition;
-	LinkedList<Integer> sourceTransfemeBoundaries;
-	LinkedList<Integer> targetTransfemeBoundaries;
-	public PackedAlignment(String source,
-                         int order,
-												 int sourcePosition,
-												 TrieNode targetPosition,
-												 LinkedList<Integer> sourceTransfemeBoundaries,
-												 LinkedList<Integer> targetTransfemeBoundaries){
+	ArrayList<Integer> sourceTransfemeBoundaries;
+	ArrayList<Integer> targetTransfemeBoundaries;
+	public Alignment(AbstractAlignment example){
+		source = example.source;
+		sourcePosition = example.sourcePosition;
+		targetPosition = example.targetPosition;
+		sourceTransfemeBoundaries = new ArrayList<Integer>();
+		targetTransfemeBoundaries = new ArrayList<Integer>();
+	}
+	public Alignment(String source,
+									 int sourcePosition,
+									 TrieNode targetPosition,
+									 ArrayList<Integer> sourceTransfemeBoundaries,
+									 ArrayList<Integer> targetTransfemeBoundaries){
     this.source = source;
-		this.order = order;
 		this.sourcePosition = sourcePosition;
 		this.targetPosition = targetPosition;
 		this.sourceTransfemeBoundaries = sourceTransfemeBoundaries;
 		this.targetTransfemeBoundaries = targetTransfemeBoundaries;
-		while(sourceTransfemeBoundaries != null && 
-          sourceTransfemeBoundaries.size() > order){
-			sourceTransfemeBoundaries.removeFirst();
-			targetTransfemeBoundaries.removeFirst();
-		}
-		backpointers = new LinkedList<BackPointer>();
-    score = new Score();
 	}
-	void addBP(BackPointer bp, Params params){
-      backpointers.add(bp);
-      if(params != null){
-        Score curScore = params.score(bp);
-        score = score.combine(curScore);
-      }
-	}
-	void addBPs(PackedAlignment other){
-		backpointers.addAll(other.backpointers);
-    score = score.combine(other.score);
-	}
-	PackedAlignment extend(String transfemeSource,
-                         String transfemeTarget,
-                         Params params){
+	Alignment extend(String transfemeSource, String transfemeTarget){
 		int newSourcePosition = sourcePosition + transfemeSource.length();
 		Assert.assertSubstringEquals(transfemeSource, source, sourcePosition, newSourcePosition);
 		
 		TrieNode newTargetPosition = targetPosition.getExtension(transfemeTarget);
 		Assert.assertNonNull(newTargetPosition);
 		
-		LinkedList<Integer> newSourceBoundaries = 
-				new LinkedList<Integer>(sourceTransfemeBoundaries);
-		LinkedList<Integer> newTargetBoundaries = 
-				new LinkedList<Integer>(targetTransfemeBoundaries);
+		ArrayList<Integer> newSourceBoundaries = 
+				new ArrayList<Integer>(sourceTransfemeBoundaries);
+		ArrayList<Integer> newTargetBoundaries = 
+				new ArrayList<Integer>(targetTransfemeBoundaries);
 		newSourceBoundaries.add(newSourcePosition);
 		newTargetBoundaries.add(newTargetPosition.depth);
-    PackedAlignment ret = new PackedAlignment(
-                               source,
-															 this.order,
-															 newSourcePosition,
-															 newTargetPosition,
-															 newSourceBoundaries,
-															 newTargetBoundaries);
-    ret.addBP(new BackPointer(this, transfemeSource, transfemeTarget), params);
+    Alignment ret = new Alignment(source,
+															 	  newSourcePosition,
+															 	  newTargetPosition,
+															 	  newSourceBoundaries,
+															 	  newTargetBoundaries);
     return ret;
 	}
 
 	@Override
 	public boolean equals(Object that){
-		return this.equals((PackedAlignment)that);
+		return this.equals((Alignment)that);
 	}
-	boolean equals(PackedAlignment that){
+	boolean equals(Alignment that){
 		return this.sourcePosition == that.sourcePosition &&
 					 this.targetPosition == that.targetPosition &&
 					 Util.listEquals(this.sourceTransfemeBoundaries, that.sourceTransfemeBoundaries) &&
@@ -124,9 +101,5 @@ public class PackedAlignment implements Comparable {
     return totalScore;
 	}
 
-  @Override
-  public int compareTo(Object other){
-    return score.totalScore > ((PackedAlignment)other).score.totalScore ? -1 : 1;
-  }
 }
 
