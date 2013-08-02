@@ -7,12 +7,14 @@ public class AlignModel implements Model<AbstractAlignment> {
 	final Trie dictionary;
 	HashMap<AbstractAlignment, PackedAlignment> cache;
 	HashBasedTable<PackedAlignment, PackedAlignment, Score> muCache;
+  HashMap<Triple<PackedAlignment, PackedAlignment, PackedAlignment>, Double> KLCache;
 	public AlignModel(Params params, String source, Trie dictionary){
 		this.params = params;
 		this.source = source;
 		this.dictionary = dictionary;
 		cache = new HashMap<AbstractAlignment, PackedAlignment>();
 		muCache = HashBasedTable.create();
+    KLCache = new HashMap<Triple<PackedAlignment, PackedAlignment, PackedAlignment>, Double>();
 	}
 	public Score mu(AbstractAlignment a, AbstractAlignment b){
 		// First, base case
@@ -124,7 +126,9 @@ public class AlignModel implements Model<AbstractAlignment> {
 		}
 
 		// Next, memoization
-		Double ans = KLCache.get(scope.pack(this), lhs.pack(this), rhs.pack(this));
+    Triple<PackedAlignment, PackedAlignment, PackedAlignment> key = 
+      Triple.makeTriple(scope.pack(this), lhs.pack(this), rhs.pack(this));
+		Double ans = KLCache.get(key);
 		if(ans != null){
 			return ans;
 		}
@@ -136,7 +140,7 @@ public class AlignModel implements Model<AbstractAlignment> {
 			ans += mu(lhs, scope).totalScore * (Math.log(dictionaryScore(rhs, bp))
 															 -Math.log(dictionaryScore(lhs, bp)));
 		}
-		KLCache.put(scope.pack(this), lhs.pack(this), rhs.pack(this), ans);
+		KLCache.put(key, ans);
 		return ans;
 	}
 
