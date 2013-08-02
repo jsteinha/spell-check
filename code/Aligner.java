@@ -2,12 +2,17 @@ import java.util.*;
 import fig.basic.LogInfo;
 public class Aligner {
 	static AlignState align(Params params, String source, Trie dictionary){
+		LogInfo.begin_track("align");
+		LogInfo.logs("building model...");
 		AlignModel model = new AlignModel(params, source, dictionary);
+		LogInfo.logs("building initial alignment...");
 		AbstractAlignment init = new AbstractAlignment(source, 0, dictionary.root());
 
 		// HACK just assume that 99 is an upper bound on the number of grades
+		LogInfo.logs("building align state...");
 		AlignState state = new AlignState(init, 99, model);
 
+		LogInfo.logs("starting BFS");
 		while(state.hasNext()){
 			ArrayList<AbstractAlignment> beam = state.next();
 			for(AbstractAlignment alignment : beam){
@@ -26,6 +31,7 @@ public class Aligner {
 				}
 			}
 		}
+		LogInfo.end_track();
 		return state;
 	}
 

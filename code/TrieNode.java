@@ -59,6 +59,9 @@ public class TrieNode {
 	boolean hasExtention(String extension){
 		return getExtension(extension) != null;
 	}
+	TrieNode getExtension(char extension){
+		return getExtension(""+extension);
+	}
 	TrieNode getExtension(String extension){
 		if(extension.length() == 0){
 			return this;

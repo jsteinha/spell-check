@@ -12,10 +12,12 @@ public class AlignState {
   PiSystem<AbstractAlignment>[] finalState;
   final AlignModel model;
 	public AlignState(AbstractAlignment startState, int maxGrade, AlignModel model){
+		LogInfo.begin_track("construct AlignState");
     this.startState = startState;
 		this.maxGrade = maxGrade;
     this.model = model;
 
+		LogInfo.logs("pack start state");
 		startState.pack(model);
 		//startState.intern.score.maxScore = 0.0;
 		//startState.intern.score.totalScore = 0.0;
@@ -23,6 +25,7 @@ public class AlignState {
     //this.finalState = new PackedAlignment();
     finalState = new PiSystem[maxGrade+1];
 
+		LogInfo.logs("initialize beams");
 		beams = new HashMap[maxGrade+1];
 		for(int i = 0; i <= maxGrade; i++)
 			beams[i] = new HashMap<Context, PiSystem<AbstractAlignment> >();
@@ -30,17 +33,23 @@ public class AlignState {
 		curGrade = -1;
 		direction = 1;
 
+		LogInfo.logs("add start state");
     add(startState);
+		LogInfo.end_track();
 	}
 	void add(AbstractAlignment alignment){
+		LogInfo.begin_track("AlignState.add");
+		LogInfo.logs("pack alignment");
 		alignment.pack(model); // causes interning and backpointers to happen
 
+		LogInfo.logs("build context");
 		Context c = new Context(alignment);
 		int grade = c.grade();
 
 		// TODO this should be done with a pi-system
     if(alignment.sourcePosition == alignment.source.length() &&
 			 alignment.targetPosition.c == '$'){
+			LogInfo.logs("add to finalState");
       if(finalState[grade] == null){
         AbstractAlignment root = new AbstractAlignment(alignment.source,
                                                        c.position,
@@ -51,16 +60,24 @@ public class AlignState {
       return;
     }
 
+		LogInfo.logs("get existing PiSystem");
 		PiSystem<AbstractAlignment> existingMap = beams[grade].get(c);
 
 		if(existingMap == null){
+			LogInfo.begin_track("found no existing PiSystem, creating new one");
+			LogInfo.logs("build root");
       AbstractAlignment root = new AbstractAlignment(alignment.source,
                                                      c.position,
 																										 model.getRoot(alignment.targetPosition));
+			LogInfo.logs("build PiSystem");
 			existingMap = new PiSystem<AbstractAlignment>(root);
+			LogInfo.logs("add to map");
 			beams[grade].put(c, existingMap);
+			LogInfo.end_track();
 		}
+		LogInfo.logs("add alignment to PiSystem");
     existingMap.add(alignment);
+		LogInfo.end_track();
 	}
 	private boolean okay(){
 		if(direction == 1) return curGrade <= maxGrade;

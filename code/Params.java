@@ -37,7 +37,7 @@ public class Params {
 	void update(String source, String target, double delta){
 		double wt = get(source, target);
 		String index = toIndex(source, target);
-		weights.put(index, wt + delta);
+		weights.put(index, Util.logPlus(wt, delta));
 	}
 	int modelOrder(){
 		return 1;

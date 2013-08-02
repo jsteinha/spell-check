@@ -36,6 +36,30 @@ public class AlignModel implements Model<AbstractAlignment> {
 		muCache.put(a.pack(this), b.pack(this), ans);
 		return ans;
 	}
+
+	private double dictionaryScore(String transfemeTarget, int position){
+		TrieNode prefix = getRoot(position);
+		int length = transfemeTarget.length(), i = 0;
+		double ans = 0.0;
+		// First, do independent parts based on which of transfemeTarget is '*'
+		while(i < transfemeTarget.length() && transfemeTarget.charAt(i) == '*'){
+			ans += Math.log(prefix.getExtension(transfemeTarget.charAt(i)).count);
+			ans -= Math.log(prefix.getExtension('*').count);
+			prefix = prefix.getExtension('*');
+			i++;
+		}
+		// Next, do the dependent part
+		ans += Math.log(prefix.getExtension(transfemeTarget.substring(i)).count);
+		ans -= Math.log(prefix.getExtension(Strings.repeat("*", length-1)).count);
+
+		return ans;
+	}
+	private double dictionaryScore(AbstractAlignment a, BackPointer bp){
+		int begin = bp.predecessor.targetPosition.depth,
+				end = a.targetPosition.depth;
+		return dictionaryScore(a.target.substring(begin,end), begin);
+	}
+
 	double muLocal(AbstractAlignment a, BackPointer bp){
 		// Assumption: either bp.beta = ***, or bp.beta is all 
 		//             concrete characters.
@@ -48,26 +72,72 @@ public class AlignModel implements Model<AbstractAlignment> {
 		double ans = params.get(bp.alpha, bp.beta);
 		
 		// Second, compute the dictionary score
-		int begin = bp.predecessor.targetPosition.depth,
-				end = a.targetPosition.depth;
-		int pos = begin;
-	  TrieNode prefix = dictionary.root().getExtension("^"+Strings.repeat("*", begin-1));
-		while(pos < end && a.target.charAt(pos) == '*'){
-			ans += Math.log(prefix.getExtension(""+bp.beta.charAt(pos-begin)).count);
-			ans -= Math.log(prefix.getExtension("*").count);
-			prefix = prefix.getExtension("*");
-			pos++;
-		}
-		ans += Math.log(prefix.getExtension(bp.beta.substring(pos-begin)).count);
-		ans -= Math.log(prefix.getExtension(Strings.repeat("*", end-pos)).count);
+		ans += dictionaryScore(a, bp);
+
 		return ans;
 	}
 	TrieNode getRoot(TrieNode example){
-		return dictionary.root.getExtension("^"+Strings.repeat("*", example.depth-1));
+		return getRoot(example.depth);
+	}
+	TrieNode getRoot(int length){
+		if(length == 0){
+			return dictionary.root;
+		} else {
+			return dictionary.root.getExtension("^"+Strings.repeat("*", length-1));
+		}
 	}
 
+	/*private double logpS(String s, int position){
+		return params.get(
+	}
+
+	private double logpT(String t, int position){
+
+	}*/
+
 	public double KL(AbstractAlignment scope, AbstractAlignment lhs, AbstractAlignment rhs){
-		throw new RuntimeException("not yet implemented");
+		// In general, the only approximation in the model comes from the fact 
+		// that we model whether something belongs to the dictionary independently 
+		// when it may not, in fact, be independent.
+		//
+		// General form of input:
+		// scope = * * s3 s4 s5 s6
+		//   lhs = * * *  *  s5 s6
+    //   rhs = * * *  s4 s5 s6
+		// In this case, the KL divergence will be:
+		//      p(t1)p(t2)p(t3|s3)p(t4|s4)p(t5|s5)p(t6|s6)
+		//       x p(s3)p(s4,s5,s6)log(p(s4,s5,s6)/[p(s4)p(s5,s6)]),
+		// where:
+		// -p(ti) is the marginal probability of an output transfeme, i.e. 
+		//    the sum over all source transfemes at that position of the 
+    //    probability of this particular output
+    // -p(si) is the marginal probability of a source transfeme
+		// 
+		// Note that we can determine this purely locally in terms of the 
+		// current transfeme, i.e. we just need to multiply the old result by 
+		// p(ti|si)p(si|s[1:i-1]) [muLocal], and then add 
+		// mu(lhs,scope) x [log p(si|s[1:i-1]) - log phat(si|s[1:i-1])]
+
+		// First, base case
+		if(scope.sourcePosition == 0 && scope.targetPosition == dictionary.root()){
+			return 0.0;
+		}
+
+		// Next, memoization
+		Double ans = KLCache.get(scope.pack(this), lhs.pack(this), rhs.pack(this));
+		if(ans != null){
+			return ans;
+		}
+
+		// Finally, recursion
+		ans = 0.0; //mu(lhs, scope) * (Math.log(dictionaryScore()-dictionaryScore()));
+		for(BackPointer bp : scope.pack(this).backpointers){
+			ans += muLocal(lhs, bp) * KL(bp.predecessor, lhs.goBack(bp), rhs.goBack(bp));
+			ans += mu(lhs, scope).totalScore * (Math.log(dictionaryScore(rhs, bp))
+															 -Math.log(dictionaryScore(lhs, bp)));
+		}
+		KLCache.put(scope.pack(this), lhs.pack(this), rhs.pack(this), ans);
+		return ans;
 	}
 
 	private String truth;
