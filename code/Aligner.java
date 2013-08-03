@@ -12,11 +12,15 @@ public class Aligner {
 		LogInfo.logs("building align state...");
 		AlignState state = new AlignState(init, 99, model);
 
-		LogInfo.logs("starting BFS");
+		LogInfo.begin_track("starting BFS");
 		while(state.hasNext()){
+      LogInfo.logs("getting next beam");
 			ArrayList<AbstractAlignment> beam = state.next();
+      LogInfo.logs("beam size: %d", beam.size());
+      LogInfo.begin_track("extending alignments");
 			for(AbstractAlignment alignment : beam){
 				List<TrieNode> extensions = alignment.targetPosition.getAllExtensions(Main.maxTransfemeSize);
+        LogInfo.logs("%d extensions", extensions.size());
 				for(TrieNode targetExtension: extensions){
 					for(int i = alignment.sourcePosition; i <= source.length() && i <= alignment.sourcePosition+Main.maxTransfemeSize; i++){
 						if(i == alignment.sourcePosition && targetExtension == alignment.targetPosition){
@@ -30,7 +34,9 @@ public class Aligner {
 					}
 				}
 			}
+      LogInfo.end_track();
 		}
+    LogInfo.end_track();
 		LogInfo.end_track();
 		return state;
 	}

@@ -78,6 +78,7 @@ public class PiSystem<E extends TreeLike<E>> {
                 }
             }
         }
+        //LogInfo.logs("memoized[%s] = %s", index, ans);
         memoized.put(index, ans);
         return ans;
     }
@@ -210,6 +211,9 @@ class Pair<F> {
     public Pair(double score, ArrayList<F> list){
         this.score = score;
         this.list = list;
+    }
+    public String toString(){
+      return score+","+list;
     }
 }
 

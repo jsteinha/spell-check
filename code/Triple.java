@@ -15,4 +15,9 @@ public class Triple<A, B, C> {
   public int hashCode(){
     return Objects.hashCode(a, b, c);
   }
+  @Override
+  public boolean equals(Object other){
+    Triple that = (Triple)other;
+    return a.equals(that.a) && b.equals(that.b) && c.equals(that.c);
+  }
 }

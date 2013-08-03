@@ -30,6 +30,7 @@ public class Main implements Runnable {
 		try {
 			runWithException();
 		} catch(Exception e) {
+      e.printStackTrace();
 			throw new RuntimeException(e.toString());
 		}
 	}

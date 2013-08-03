@@ -1,6 +1,7 @@
 import com.google.common.base.Strings;
 import com.google.common.collect.HashBasedTable;
 import java.util.*;
+import fig.basic.LogInfo;
 public class AlignModel implements Model<AbstractAlignment> {
 	final Params params;
 	final String source;
@@ -51,9 +52,20 @@ public class AlignModel implements Model<AbstractAlignment> {
 			i++;
 		}
 		// Next, do the dependent part
+    /*LogInfo.logs("prefix: %s", prefix);
+		LogInfo.logs("extend(%s) = %s", transfemeTarget.substring(i),
+                 prefix.getExtension(transfemeTarget.substring(i)));
+    LogInfo.logs("extend(%s) = %s", Strings.repeat("*", length-i),
+                 prefix.getExtension(Strings.repeat("*", length-i)));*/
 		ans += Math.log(prefix.getExtension(transfemeTarget.substring(i)).count);
-		ans -= Math.log(prefix.getExtension(Strings.repeat("*", length-1)).count);
-
+    if(i + position == 0 && length > 0){
+		  ans -= Math.log(prefix.getExtension("^"+Strings.repeat("*", length-i-1)).count);
+    } else {
+		  ans -= Math.log(prefix.getExtension(Strings.repeat("*", length-i)).count);
+    }
+    if(Double.isNaN(ans)){
+      LogInfo.logs("got NaN: %s,%d", transfemeTarget, position);
+    }
 		return ans;
 	}
 	private double dictionaryScore(AbstractAlignment a, BackPointer bp){
@@ -104,8 +116,8 @@ public class AlignModel implements Model<AbstractAlignment> {
 		//
 		// General form of input:
 		// scope = * * s3 s4 s5 s6
-		//   lhs = * * *  *  s5 s6
-    //   rhs = * * *  s4 s5 s6
+    //   lhs = * * *  s4 s5 s6
+		//   rhs = * * *  *  s5 s6
 		// In this case, the KL divergence will be:
 		//      p(t1)p(t2)p(t3|s3)p(t4|s4)p(t5|s5)p(t6|s6)
 		//       x p(s3)p(s4,s5,s6)log(p(s4,s5,s6)/[p(s4)p(s5,s6)]),
@@ -130,16 +142,20 @@ public class AlignModel implements Model<AbstractAlignment> {
       Triple.makeTriple(scope.pack(this), lhs.pack(this), rhs.pack(this));
 		Double ans = KLCache.get(key);
 		if(ans != null){
+      //LogInfo.logs("memoization succeeded");
 			return ans;
 		}
 
 		// Finally, recursion
 		ans = 0.0; //mu(lhs, scope) * (Math.log(dictionaryScore()-dictionaryScore()));
 		for(BackPointer bp : scope.pack(this).backpointers){
-			ans += muLocal(lhs, bp) * KL(bp.predecessor, lhs.goBack(bp), rhs.goBack(bp));
-			ans += mu(lhs, scope).totalScore * (Math.log(dictionaryScore(rhs, bp))
-															 -Math.log(dictionaryScore(lhs, bp)));
+			ans += Math.exp(muLocal(lhs, bp)) * KL(bp.predecessor, lhs.goBack(bp), rhs.goBack(bp));
+			ans += Math.exp(mu(lhs, scope).totalScore) * (dictionaryScore(lhs, bp)
+															                      -dictionaryScore(rhs, bp));
 		}
+    if(ans > 1e-8){
+      LogInfo.logs("KL(%s,%s,%s)=%f", scope, lhs, rhs, ans);
+    }
 		KLCache.put(key, ans);
 		return ans;
 	}

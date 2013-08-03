@@ -77,7 +77,7 @@ public class AbstractAlignment extends TreeLike<AbstractAlignment> {
   @Override
   public String toString(){
     if(source == null) return "*";
-		return source + "=>" + targetPosition.toString();
+		return source.substring(0,sourcePosition) + "=>" + targetPosition.toString();
   }
 
 	/* implement TreeLike methods */
@@ -87,6 +87,7 @@ public class AbstractAlignment extends TreeLike<AbstractAlignment> {
 	 */
 
 	public AbstractAlignment max(AbstractAlignment rhs){
+    //LogInfo.begin_track("max(%s,%s)", this, rhs);
 		String lhsTarget = targetPosition.toString(),
 					 rhsTarget = rhs.targetPosition.toString();
 		Assert.assertEquals(lhsTarget.length(), rhsTarget.length());
@@ -95,10 +96,17 @@ public class AbstractAlignment extends TreeLike<AbstractAlignment> {
 			if(lhsTarget.charAt(i) != rhsTarget.charAt(i))
 				lastUnequal = i;
 		String maxTarget = "";
-		for(int i = 0; i <= lastUnequal; i++)
-			maxTarget += "*";
+		for(int i = 0; i <= lastUnequal; i++){
+      if(i==0){
+        maxTarget += "^";
+      } else {
+			  maxTarget += "*";
+      }
+    }
 		maxTarget += lhsTarget.substring(lastUnequal+1);
+    //LogInfo.logs("maxTarget: %s", maxTarget);
 		TrieNode maxTargetPosition = targetPosition.root.getExtension(maxTarget);
+    //LogInfo.end_track();
 		return new AbstractAlignment(source,
 																 sourcePosition,
 																 maxTargetPosition);
