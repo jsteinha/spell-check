@@ -1,4 +1,5 @@
 import java.util.*;
+import fig.basic.LogInfo;
 public class TrieNode {
 	static int GUIDCOUNT = 0;
 	TrieNode[] children;
@@ -17,17 +18,16 @@ public class TrieNode {
 		count = 0;
 	}
 	void add(String suffix){
+    //LogInfo.logs("suffix=%s", suffix);
 		count++;
-		if(suffix.length() == 0){
-			getChild('$').addFinal();
-		} else {
+		if(suffix.length() > 0){
 			getChild(suffix.charAt(0)).add(suffix.substring(1));
 		}
 	}
-	void addFinal(){
+	/*void addFinal(){
 		count++;
 		return;
-	}
+	}*/
 	int getIndex(char c){
 		int index;
 		if(c >= 'a' && c <= 'z'){

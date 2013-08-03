@@ -12,6 +12,7 @@ public class Trie {
 		this.addAbstract = addAbstract;
 	}
 	void add(String str){
+    str += "$";
 		if(addAbstract){
 			for(int i = 0; i <= str.length(); i++)
 				root.add("^"+Strings.repeat("*",i)+str.substring(i));
