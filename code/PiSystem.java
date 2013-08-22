@@ -96,7 +96,7 @@ public class PiSystem<E extends TreeLike<E>> {
                                                  int size){
         memoized = new HashMap<Wrapper, Pair>();
         pi.tree.makeGuids(0);
-        pi.tree.print(model);
+        //pi.tree.print(model);
         Pair<F> pair = optimalSubtree(model, pi.tree, pi.tree, 0, size);
         return pair.list;
     }

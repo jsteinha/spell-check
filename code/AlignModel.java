@@ -40,44 +40,16 @@ public class AlignModel implements Model<AbstractAlignment> {
 		return ans;
 	}
 
-	private double dictionaryScore(String reference, String transfemeTarget, TrieNode prefix){ //int position){
-		int length = transfemeTarget.length(), i = 0;
+	private double dictionaryScore(String reference, String transfemeTarget, TrieNode prefix){
 		double ans = 0.0;
-		while(i < transfemeTarget.length()){ //transfemeTarget.charAt(i) == '*'){
-			//ans += Math.log(prefix.getExtension(transfemeTarget.charAt(i)).count);
-			//ans -= Math.log(prefix.getExtension('*').count);
-      if(prefix.getExtension(transfemeTarget.charAt(i)) == null){
-        LogInfo.logs("prefix: %s", prefix);
-        LogInfo.logs("nextChar: %c", transfemeTarget.charAt(i));
-      }
+		for(int i = 0; i < transfemeTarget.length(); i++){
       ans += Math.log(prefix.getExtension(transfemeTarget.charAt(i)).count);
       ans -= Math.log(prefix.count);
 			prefix = prefix.getExtension(reference.charAt(i));
-			i++;
 		}
-
-    
-		// Next, do the dependent part
-    /*LogInfo.logs("prefix: %s", prefix);
-		LogInfo.logs("extend(%s) = %s", transfemeTarget.substring(i),
-                 prefix.getExtension(transfemeTarget.substring(i)));
-    LogInfo.logs("extend(%s) = %s", Strings.repeat("*", length-i),
-                 prefix.getExtension(Strings.repeat("*", length-i)));*/
-		/*ans += Math.log(prefix.getExtension(transfemeTarget.substring(i)).count);
-    //LogInfo.logs("prefix=%s", prefix);
-    //LogInfo.logs("count1=%d", prefix.getExtension(transfemeTarget.substring(i)).count);
-    if(prefix.depth == 0 && length > 0){
-		  ans -= Math.log(prefix.getExtension("^"+Strings.repeat("*", length-i-1)).count);
-      //LogInfo.logs("count2=%d", prefix.getExtension("^"+Strings.repeat("*", length-i-1)).count);
-    } else {
-      LogInfo.logs("prefix=%s, depth=%d", prefix, prefix.depth);
-		  ans -= Math.log(prefix.getExtension(Strings.repeat("*", length-i)).count);
-      //LogInfo.logs("count2=%d", prefix.getExtension(Strings.repeat("*", length-i)).count);
-    }*/
     if(Double.isNaN(ans)){
-      LogInfo.logs("got NaN: %s,%s", transfemeTarget, prefix); //position);
+      LogInfo.logs("got NaN: %s,%s", transfemeTarget, prefix);
     }
-    //LogInfo.logs("dictionaryScore(%s,%d)=%f",transfemeTarget,position,ans);
 		return ans;
 	}
 	private double dictionaryScore(AbstractAlignment a, BackPointer bp){
@@ -89,17 +61,12 @@ public class AlignModel implements Model<AbstractAlignment> {
     } else {
       prefix = a.goBack(bp).targetPosition; // TODO probably really slow
     }
-    try {
-		return dictionaryScore(a.target.substring(begin,end), bp.beta, prefix); //begin);
-    } catch(RuntimeException e){
-      LogInfo.logs("EXCEPTION: a=%s, bp=%s, bp.pred=%s", a, bp, bp.predecessor);
-      throw new RuntimeException("dictoinaryscore");
-    }
+		return dictionaryScore(a.target.substring(begin,end), bp.beta, prefix);
 	}
 
 	double muLocal(AbstractAlignment a, BackPointer bp){
 		// Assumption: either bp.beta = ***, or bp.beta is all 
-		//             concrete characters.
+		//             concrete characters. TODO is this assumption accurate?
 		// Judges the score of a move given by bp from the perspective of a.
 		// If a is concrete, this is just params.get(bp.alpha, bp.beta).
 		// Otherwise, we make the approximation that all letters 
@@ -109,12 +76,10 @@ public class AlignModel implements Model<AbstractAlignment> {
     int begin = bp.predecessor.targetPosition.depth,
         end = a.targetPosition.depth;
     String beta2 = a.target.substring(begin,end);
-		double ans = params.get(bp.alpha, beta2); //bp.beta);
-    //LogInfo.logs("params(%s->%s) = %f", bp.alpha, beta2, ans);
+		double ans = params.get(bp.alpha, beta2);
 		
 		// Second, compute the dictionary score
 		ans += dictionaryScore(a, bp);
-    //LogInfo.logs("dictScore(%s,%s) = %f", a, bp, dictionaryScore(a, bp));
 
 		return ans;
 	}
@@ -128,14 +93,6 @@ public class AlignModel implements Model<AbstractAlignment> {
 			return dictionary.root.getExtension("^"+Strings.repeat("*", length-1));
 		}
 	}
-
-	/*private double logpS(String s, int position){
-		return params.get(
-	}
-
-	private double logpT(String t, int position){
-
-	}*/
 
 	public double KL(AbstractAlignment scope, AbstractAlignment lhs, AbstractAlignment rhs){
 		// In general, the only approximation in the model comes from the fact 
@@ -170,21 +127,15 @@ public class AlignModel implements Model<AbstractAlignment> {
       Triple.makeTriple(scope.pack(this), lhs.pack(this), rhs.pack(this));
 		Double ans = KLCache.get(key);
 		if(ans != null){
-      //LogInfo.logs("memoization succeeded");
 			return ans;
 		}
 
 		// Finally, recursion
-		ans = 0.0; //mu(lhs, scope) * (Math.log(dictionaryScore()-dictionaryScore()));
+		ans = 0.0;
 		for(BackPointer bp : scope.pack(this).backpointers){
       if(muLocal(lhs,bp) == Double.NEGATIVE_INFINITY) continue;
-      //LogInfo.logs("muLocal(%s,%s)=%f", lhs, bp, muLocal(lhs,bp));
-      //LogInfo.logs("muLocal(%s,%s)=%f", rhs, bp, muLocal(rhs,bp));
-      //LogInfo.logs("mu(%s,%s)=%f", lhs, scope, mu(lhs,scope).totalScore);
 			ans += Math.exp(muLocal(lhs, bp)) * KL(bp.predecessor, lhs.goBack(bp), rhs.goBack(bp));
 			ans += Math.exp(mu(lhs, scope).totalScore) * (muLocal(lhs, bp) - muLocal(rhs, bp));
-                                                    //(dictionaryScore(lhs, bp)
-															                      //-dictionaryScore(rhs, bp));
 		}
     if(true || ans > 1e-8){
       //LogInfo.logs("KL(%s,%s,%s)=%f [mu(%s,%s)=%f, mu(%s,%s)=%f]", scope, lhs, rhs, ans, lhs, scope, mu(lhs, scope).totalScore, rhs, scope, mu(rhs, scope).totalScore);
