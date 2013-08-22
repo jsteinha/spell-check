@@ -40,35 +40,40 @@ public class AlignModel implements Model<AbstractAlignment> {
 		return ans;
 	}
 
-	private double dictionaryScore(String transfemeTarget, int position){
-		TrieNode prefix = getRoot(position);
-		int length = transfemeTarget.length(), i = 0;
+	private double dictionaryScore(String reference, String transfemeTarget, TrieNode prefix){ //int position){
+		//TrieNode prefix = getRoot(position);
+		int length = transfemeTarget.length(), i = 0, position = prefix.depth;
 		double ans = 0.0;
 		// First, do independent parts based on which of transfemeTarget is '*'
-		while(i < transfemeTarget.length() && transfemeTarget.charAt(i) == '*'){
-			ans += Math.log(prefix.getExtension(transfemeTarget.charAt(i)).count);
-			ans -= Math.log(prefix.getExtension('*').count);
-			prefix = prefix.getExtension('*');
+		while(i < transfemeTarget.length() && reference.charAt(i) == '*'){ //transfemeTarget.charAt(i) == '*'){
+			//ans += Math.log(prefix.getExtension(transfemeTarget.charAt(i)).count);
+			//ans -= Math.log(prefix.getExtension('*').count);
+      ans += Math.log(prefix.getExtension(transfemeTarget.charAt(i)).count);
+      ans -= Math.log(prefix.count);
+			prefix = prefix.getExtension(reference.charAt(i));
 			i++;
 		}
+
+    
 		// Next, do the dependent part
     /*LogInfo.logs("prefix: %s", prefix);
 		LogInfo.logs("extend(%s) = %s", transfemeTarget.substring(i),
                  prefix.getExtension(transfemeTarget.substring(i)));
     LogInfo.logs("extend(%s) = %s", Strings.repeat("*", length-i),
                  prefix.getExtension(Strings.repeat("*", length-i)));*/
-		ans += Math.log(prefix.getExtension(transfemeTarget.substring(i)).count);
+		/*ans += Math.log(prefix.getExtension(transfemeTarget.substring(i)).count);
     //LogInfo.logs("prefix=%s", prefix);
     //LogInfo.logs("count1=%d", prefix.getExtension(transfemeTarget.substring(i)).count);
-    if(i + position == 0 && length > 0){
+    if(prefix.depth == 0 && length > 0){
 		  ans -= Math.log(prefix.getExtension("^"+Strings.repeat("*", length-i-1)).count);
       //LogInfo.logs("count2=%d", prefix.getExtension("^"+Strings.repeat("*", length-i-1)).count);
     } else {
+      LogInfo.logs("prefix=%s, depth=%d", prefix, prefix.depth);
 		  ans -= Math.log(prefix.getExtension(Strings.repeat("*", length-i)).count);
       //LogInfo.logs("count2=%d", prefix.getExtension(Strings.repeat("*", length-i)).count);
-    }
+    }*/
     if(Double.isNaN(ans)){
-      LogInfo.logs("got NaN: %s,%d", transfemeTarget, position);
+      LogInfo.logs("got NaN: %s,%s", transfemeTarget, prefix); //position);
     }
     //LogInfo.logs("dictionaryScore(%s,%d)=%f",transfemeTarget,position,ans);
 		return ans;
@@ -76,7 +81,13 @@ public class AlignModel implements Model<AbstractAlignment> {
 	private double dictionaryScore(AbstractAlignment a, BackPointer bp){
 		int begin = bp.predecessor.targetPosition.depth,
 				end = a.targetPosition.depth;
-		return dictionaryScore(a.target.substring(begin,end), begin);
+    TrieNode prefix;
+    if(begin == 0 || a.target.charAt(begin-1) == '*'){
+      prefix = getRoot(begin);
+    } else {
+      prefix = a.goBack(bp).targetPosition; // TODO probably really slow
+    }
+		return dictionaryScore(a.target.substring(begin,end), bp.beta, prefix); //begin);
 	}
 
 	double muLocal(AbstractAlignment a, BackPointer bp){
