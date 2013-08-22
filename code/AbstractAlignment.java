@@ -122,7 +122,8 @@ public class AbstractAlignment extends TreeLike<AbstractAlignment> {
 		String lhsTarget = targetPosition.toString(),
 					 rhsTarget = rhs.targetPosition.toString();
 		Assert.assertEquals(lhsTarget.length(), rhsTarget.length());
-		for(int i = 0; i < lhsTarget.length(); i++){
+		//for(int i = 0; i < lhsTarget.length(); i++){
+		for(int i = lhsTarget.length()-1; i >= 0; i--){
 			if(lhsTarget.charAt(i) != rhsTarget.charAt(i)){
 				return rhsTarget.charAt(i) == '*';
 			}

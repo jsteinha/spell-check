@@ -41,13 +41,15 @@ public class AlignModel implements Model<AbstractAlignment> {
 	}
 
 	private double dictionaryScore(String reference, String transfemeTarget, TrieNode prefix){ //int position){
-		//TrieNode prefix = getRoot(position);
-		int length = transfemeTarget.length(), i = 0, position = prefix.depth;
+		int length = transfemeTarget.length(), i = 0;
 		double ans = 0.0;
-		// First, do independent parts based on which of transfemeTarget is '*'
-		while(i < transfemeTarget.length() && reference.charAt(i) == '*'){ //transfemeTarget.charAt(i) == '*'){
+		while(i < transfemeTarget.length()){ //transfemeTarget.charAt(i) == '*'){
 			//ans += Math.log(prefix.getExtension(transfemeTarget.charAt(i)).count);
 			//ans -= Math.log(prefix.getExtension('*').count);
+      if(prefix.getExtension(transfemeTarget.charAt(i)) == null){
+        LogInfo.logs("prefix: %s", prefix);
+        LogInfo.logs("nextChar: %c", transfemeTarget.charAt(i));
+      }
       ans += Math.log(prefix.getExtension(transfemeTarget.charAt(i)).count);
       ans -= Math.log(prefix.count);
 			prefix = prefix.getExtension(reference.charAt(i));
@@ -87,7 +89,12 @@ public class AlignModel implements Model<AbstractAlignment> {
     } else {
       prefix = a.goBack(bp).targetPosition; // TODO probably really slow
     }
+    try {
 		return dictionaryScore(a.target.substring(begin,end), bp.beta, prefix); //begin);
+    } catch(RuntimeException e){
+      LogInfo.logs("EXCEPTION: a=%s, bp=%s, bp.pred=%s", a, bp, bp.predecessor);
+      throw new RuntimeException("dictoinaryscore");
+    }
 	}
 
 	double muLocal(AbstractAlignment a, BackPointer bp){
