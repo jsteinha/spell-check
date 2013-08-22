@@ -37,3 +37,6 @@ clean:
 
 run:
 	java -cp .:$(include):classes/$(NAME) Main -execPoolDir $(prefix)/$(NAME) -Main.experimentName $(NAME) -Main.beamSize $(BEAM_SIZE) -Main.printBeam $(PRINT_BEAM) -Main.maxTransfemeSize $(TRANSFEME_SIZE) -Main.numIter $(NUM_ITER) -Main.evalName $(EVAL_NAME) -Main.maxTrain $(MAX_TRAIN)
+
+test:
+	java -cp .:$(include):classes/$(NAME) Test -execPoolDir $(prefix)/$(NAME) -Test.experimentName $(NAME) -Test.beamSize $(BEAM_SIZE) -Test.printBeam $(PRINT_BEAM) -Test.maxTransfemeSize $(TRANSFEME_SIZE) -Test.numIter $(NUM_ITER) -Test.evalName $(EVAL_NAME) -Test.maxTrain $(MAX_TRAIN)

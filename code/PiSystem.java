@@ -35,7 +35,8 @@ public class PiSystem<E extends TreeLike<E>> {
     }
 
     static HashMap<Wrapper, Pair> memoized;
-    static <F extends TreeLike<F>> Pair<F> optimalSubtree(Model<F> model, Tree<F> ancestor, Tree<F> subtree,
+    static <F extends TreeLike<F>> Pair<F> optimalSubtree(Model<F> model, Tree<F> ancestor, 
+                                                          Tree<F> subtree,
                                                           int childIndex, int numPlacements){
 
         Wrapper index = new Wrapper(ancestor, subtree, childIndex, numPlacements);
@@ -46,9 +47,16 @@ public class PiSystem<E extends TreeLike<E>> {
             if(numPlacements > 0){
                 ans = optimalSubtree(model, ancestor, subtree, childIndex, 0);
             } else {
-                double score = model.KL(subtree.state, subtree.state, ancestor.state);
-                for(Tree<F> child : subtree.children)
-                    score -= model.KL(child.state, subtree.state, ancestor.state);
+                double score = 0.0;
+                if(ancestor != subtree){
+                  score = model.KL(subtree.state, subtree.state, ancestor.state);
+                  //score += model.KL(subtree.state, ancestor.state, subtree.state);
+                  for(Tree<F> child : subtree.children){
+                      score -= model.KL(child.state, subtree.state, ancestor.state);
+                      //score -= model.KL(child.state, ancestor.state, subtree.state);
+                  }
+                  //score = Math.exp(mLoc) * (sLoc - mLoc);
+                }
                 ans = new Pair<F>(score, new ArrayList<F>());
             }
         } else {
@@ -88,7 +96,7 @@ public class PiSystem<E extends TreeLike<E>> {
                                                  int size){
         memoized = new HashMap<Wrapper, Pair>();
         pi.tree.makeGuids(0);
-        pi.tree.print();
+        pi.tree.print(model);
         Pair<F> pair = optimalSubtree(model, pi.tree, pi.tree, 0, size);
         return pair.list;
     }
@@ -193,15 +201,15 @@ class Tree<E extends TreeLike<E>> {
         return ret;
     }
 
-    void print(){
+    void print(Model<E> m){
         LogInfo.begin_track("Printing tree");
-        print(null);
+        print(null, m);
         LogInfo.end_track();
     }
-    void print(E previous){
-        LogInfo.logs("%s", state);
+    void print(E previous, Model<E> m){
+        LogInfo.logs("%s (par=%s, score=%f)", state, previous, m.mu(state, state).totalScore);
         for(Tree<E> c : children)
-            c.print(state);
+            c.print(state, m);
     }
 }
 

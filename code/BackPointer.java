@@ -6,4 +6,7 @@ public class BackPointer {
     this.alpha = alpha;
     this.beta = beta;
   }
+  public String toString(){
+    return "BP["+alpha+","+beta+"]";
+  }
 }

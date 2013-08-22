@@ -2,8 +2,10 @@ import java.util.*;
 import fig.basic.LogInfo;
 public class Params {
 	Map<String, Double> weights;
+  HashMap<String, Double> baseCounts;
 	public Params(){
 		weights = new HashMap<String, Double>();
+    baseCounts = null;
 	}
 	static String toIndex(String source, String target){
 		return StrUtils.join(source, "->", target);

@@ -58,14 +58,19 @@ public class AlignModel implements Model<AbstractAlignment> {
     LogInfo.logs("extend(%s) = %s", Strings.repeat("*", length-i),
                  prefix.getExtension(Strings.repeat("*", length-i)));*/
 		ans += Math.log(prefix.getExtension(transfemeTarget.substring(i)).count);
+    //LogInfo.logs("prefix=%s", prefix);
+    //LogInfo.logs("count1=%d", prefix.getExtension(transfemeTarget.substring(i)).count);
     if(i + position == 0 && length > 0){
 		  ans -= Math.log(prefix.getExtension("^"+Strings.repeat("*", length-i-1)).count);
+      //LogInfo.logs("count2=%d", prefix.getExtension("^"+Strings.repeat("*", length-i-1)).count);
     } else {
 		  ans -= Math.log(prefix.getExtension(Strings.repeat("*", length-i)).count);
+      //LogInfo.logs("count2=%d", prefix.getExtension(Strings.repeat("*", length-i)).count);
     }
     if(Double.isNaN(ans)){
       LogInfo.logs("got NaN: %s,%d", transfemeTarget, position);
     }
+    //LogInfo.logs("dictionaryScore(%s,%d)=%f",transfemeTarget,position,ans);
 		return ans;
 	}
 	private double dictionaryScore(AbstractAlignment a, BackPointer bp){
@@ -83,10 +88,15 @@ public class AlignModel implements Model<AbstractAlignment> {
 		// where a is abstract are independent.
 
 		// First, compute score for the transition
-		double ans = params.get(bp.alpha, bp.beta);
+    int begin = bp.predecessor.targetPosition.depth,
+        end = a.targetPosition.depth;
+    String beta2 = a.target.substring(begin,end);
+		double ans = params.get(bp.alpha, beta2); //bp.beta);
+    //LogInfo.logs("params(%s->%s) = %f", bp.alpha, beta2, ans);
 		
 		// Second, compute the dictionary score
 		ans += dictionaryScore(a, bp);
+    //LogInfo.logs("dictScore(%s,%s) = %f", a, bp, dictionaryScore(a, bp));
 
 		return ans;
 	}
@@ -149,12 +159,17 @@ public class AlignModel implements Model<AbstractAlignment> {
 		// Finally, recursion
 		ans = 0.0; //mu(lhs, scope) * (Math.log(dictionaryScore()-dictionaryScore()));
 		for(BackPointer bp : scope.pack(this).backpointers){
+      if(muLocal(lhs,bp) == Double.NEGATIVE_INFINITY) continue;
+      //LogInfo.logs("muLocal(%s,%s)=%f", lhs, bp, muLocal(lhs,bp));
+      //LogInfo.logs("muLocal(%s,%s)=%f", rhs, bp, muLocal(rhs,bp));
+      //LogInfo.logs("mu(%s,%s)=%f", lhs, scope, mu(lhs,scope).totalScore);
 			ans += Math.exp(muLocal(lhs, bp)) * KL(bp.predecessor, lhs.goBack(bp), rhs.goBack(bp));
-			ans += Math.exp(mu(lhs, scope).totalScore) * (dictionaryScore(lhs, bp)
-															                      -dictionaryScore(rhs, bp));
+			ans += Math.exp(mu(lhs, scope).totalScore) * (muLocal(lhs, bp) - muLocal(rhs, bp));
+                                                    //(dictionaryScore(lhs, bp)
+															                      //-dictionaryScore(rhs, bp));
 		}
-    if(ans > 1e-8){
-      LogInfo.logs("KL(%s,%s,%s)=%f", scope, lhs, rhs, ans);
+    if(true || ans > 1e-8){
+      //LogInfo.logs("KL(%s,%s,%s)=%f [mu(%s,%s)=%f, mu(%s,%s)=%f]", scope, lhs, rhs, ans, lhs, scope, mu(lhs, scope).totalScore, rhs, scope, mu(rhs, scope).totalScore);
     }
 		KLCache.put(key, ans);
 		return ans;

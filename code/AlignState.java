@@ -41,6 +41,8 @@ public class AlignState {
 		//LogInfo.begin_track("AlignState.add");
 		//LogInfo.logs("pack alignment");
 		alignment.pack(model); // causes interning and backpointers to happen
+    //LogInfo.logs("adding %s (score=%f)", alignment, model.mu(alignment, alignment).totalScore);
+    //if(model.mu(alignment,alignment).totalScore == Double.NEGATIVE_INFINITY) return;
 
 		//LogInfo.logs("build context");
 		Context c = new Context(alignment);
@@ -57,7 +59,7 @@ public class AlignState {
         finalState[grade] = new PiSystem<AbstractAlignment>(root);
       }
       finalState[grade].add(alignment);
-      return;
+      //return;
     }
 
 		//LogInfo.logs("get existing PiSystem");
@@ -99,6 +101,9 @@ public class AlignState {
 		skipEmpty();
 		Context c = curContexts.removeFirst();
     PiSystem<AbstractAlignment> pi = beams[curGrade].get(c);
+    /*LogInfo.begin_track("printing full tree");
+    pi.tree.print(model);
+    LogInfo.end_track();*/
     ArrayList<AbstractAlignment> beam = PiSystem.prune(model, pi, Main.beamSize);
     LogInfo.logs("beam: %s", beam);
     beam.add(pi.tree.state); // need to add root (???)

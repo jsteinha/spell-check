@@ -19,7 +19,10 @@ public class EMLearner {
       LogInfo.end_track();*/
       Util.incrMap(totalCounts, counts); //Aligner.counts(state, paramsIn));
 			// get baseline counts
+
+      //String baseStr = e.source;
 			String baseStr = "^"+e.target+"$";
+
 			for(int i = 0; i <= baseStr.length(); i++){
 				for(int j = 0; j <= Main.maxTransfemeSize; j++){
 					if(i+j <= baseStr.length()){
@@ -29,9 +32,9 @@ public class EMLearner {
 			}
 			LogInfo.end_track();
     }
-		totalCounts = Util.divide(totalCounts, baseCounts);
+		totalCounts = Util.divide2(totalCounts, baseCounts);
 		//totalCounts = Util.normalize(totalCounts);
-		Params paramsOut = new HardParams(totalCounts);
+		Params paramsOut = new HardParams(totalCounts, baseCounts);
 		LogInfo.begin_track("Intermediate params:");
 		paramsOut.print();
 		LogInfo.end_track();

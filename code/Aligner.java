@@ -26,10 +26,11 @@ public class Aligner {
 						if(i == alignment.sourcePosition && targetExtension == alignment.targetPosition){
 							continue; // make sure we have at least one change
 						}
+            String tSource = source.substring(alignment.sourcePosition, i);
+            String tTarget = alignment.targetPosition.spanTo(targetExtension);
+            if(params.get(tSource, tTarget) == Double.NEGATIVE_INFINITY) continue;
 						AbstractAlignment newAlignment = 
-							alignment.extend(source.substring(alignment.sourcePosition, i),
-															 alignment.targetPosition.spanTo(targetExtension),
-														   model);
+							alignment.extend(tSource, tTarget, model);
 						state.add(newAlignment);
 					}
 				}

@@ -58,7 +58,20 @@ public class Util {
 		}
 	}
 
-	static HashMap<String, HashMap<String, Double> > divide(HashMap<String, HashMap<String, Double>> num, HashMap<String, Double> denom){
+  static HashMap<String, HashMap<String, Double> > divide1(HashMap<String, HashMap<String, Double>> num, HashMap<String, Double> denom){
+		HashMap<String, HashMap<String, Double>> out = new HashMap<String, HashMap<String, Double>>();
+		for(String a : num.keySet()){
+      Double d = denom.get(a);
+			HashMap<String, Double> out_a = new HashMap<String, Double>();
+			for(String b : num.get(a).keySet()){
+				out_a.put(b, num.get(a).get(b) / (d+3.0)); // TODO hack
+			}
+			out.put(a, out_a);
+		}
+		return out;
+	}
+
+	static HashMap<String, HashMap<String, Double> > divide2(HashMap<String, HashMap<String, Double>> num, HashMap<String, Double> denom){
 		HashMap<String, HashMap<String, Double>> out = new HashMap<String, HashMap<String, Double>>();
 		for(String a : num.keySet()){
 			HashMap<String, Double> out_a = new HashMap<String, Double>();

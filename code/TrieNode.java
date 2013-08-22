@@ -17,6 +17,17 @@ public class TrieNode {
 		children = new TrieNode[29];
 		count = 0;
 	}
+  void addAbstract(String suffix){
+    count++;
+    if(suffix.length() > 0){
+      if(suffix.charAt(0) == '^'){
+        getChild('^').addAbstract(suffix.substring(1));
+      } else {
+        getChild('*').addAbstract(suffix.substring(1));
+        getChild(suffix.charAt(0)).add(suffix.substring(1));
+      }
+    }
+  }
 	void add(String suffix){
     //LogInfo.logs("suffix=%s", suffix);
 		count++;
