@@ -43,7 +43,12 @@ public class PiSystem<E extends TreeLike<E>> {
         Pair<F> ans = memoized.get(index);
         if(ans != null) return ans;
         else ans = new Pair<F>(Double.POSITIVE_INFINITY, null);
-        if(childIndex == subtree.numChildren()){
+				/*if(model.mu(subtree.state, subtree.state).totalScore < model.mu(ancestor.state, ancestor.state).totalScore - 10.0){
+					// auto-prune really unlikely nodes
+					ans = new Pair<F>(0.0, new ArrayList<F>());
+				}
+        else */
+				if(childIndex == subtree.numChildren()){
             if(numPlacements > 0){
                 ans = optimalSubtree(model, ancestor, subtree, childIndex, 0);
             } else {
