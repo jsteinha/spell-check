@@ -1,5 +1,7 @@
 import java.util.*;
 import fig.basic.LogInfo;
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
 public class Aligner {
 	static AlignState align(Params params, String source, Trie dictionary){
 		LogInfo.begin_track("align");
@@ -83,7 +85,81 @@ public class Aligner {
 				candidates.addAll(state.finalState[i].tree.flatten(state.model, false));
 			}
 		}
-		WithMass<AbstractAlignment> best = null;
+
+    HashMap<PackedAlignment, PackedAlignment> preds = new HashMap<PackedAlignment, PackedAlignment>();
+    HashMap<PackedAlignment, BackPointer> predBPs = new HashMap<PackedAlignment, BackPointer>();
+    HashMap<PackedAlignment, Double> dists = new HashMap<PackedAlignment, Double>();
+    HashMap<PackedAlignment, Integer> inDegree = new HashMap<PackedAlignment, Integer>();
+    AlignModel model = state.model;
+    HashBasedTable<PackedAlignment, PackedAlignment, Edge> edges = model.edges;
+
+    LogInfo.logs("Computing inDegrees: %d edges total", edges.size());
+    for(Table.Cell<PackedAlignment, PackedAlignment, Edge> cell : edges.cellSet()){
+      PackedAlignment v = cell.getColumnKey();
+      Integer cur = inDegree.get(v);
+      if(cur == null){
+        inDegree.put(v, 1);
+      } else {
+        inDegree.put(v, cur+1);
+      }
+    }
+
+    PackedAlignment start = state.startState.pack(model);
+    LinkedList<PackedAlignment> queue = new LinkedList<PackedAlignment>();
+
+    dists.put(start, 0.0);
+    queue.addLast(start);
+
+    /*for(WithMass<AbstractAlignment> wm : candidates){
+      PackedAlignment target = wm.particle.pack(model);
+      dists.put(target, 0.0);
+      queue.addLast(target);
+    }*/
+
+    LogInfo.begin_track("Graph search");
+    while(queue.size() > 0){
+      //LogInfo.logs("size: %d", queue.size());
+      PackedAlignment u = queue.removeFirst();
+      //LogInfo.logs("u: %s (size=%d)", u, queue.size());
+      Double dist = dists.get(u);
+      for(PackedAlignment v : edges.row(u).keySet()){
+        Edge e = edges.get(u,v);
+        Double oldDist = dists.get(v);
+        // note that edge weights are all negative
+        if(oldDist == null || dist+e.weight > oldDist){
+          dists.put(v, dist+e.weight);
+          preds.put(v, u);
+          predBPs.put(v, e.label);
+          if(e.label == null){
+            //LogInfo.logs("adding projection");
+          } else {
+            //LogInfo.logs("adding %s [%s->%s]", e.label.predecessor, e.label.alpha, e.label.beta);
+          }
+        }
+        inDegree.put(v, inDegree.get(v)-1);
+        if(inDegree.get(v) == 0){
+          queue.addLast(v);
+        }
+      }
+    }
+    LogInfo.end_track();
+
+    PackedAlignment best = null;
+    Double bestDist = null;
+    for(WithMass<AbstractAlignment> wm : candidates){
+      PackedAlignment target = wm.particle.pack(model);
+      if(dists.get(target) == null) continue;
+      if(best == null || dists.get(target) > bestDist){
+        best = target;
+        bestDist = dists.get(target);
+      }
+    }
+    if(bestDist == null){
+      LogInfo.logs("ERROR: no path found to target");
+      return null;
+    }
+    
+		/*WithMass<AbstractAlignment> best = null;
 		for(WithMass<AbstractAlignment> wm : candidates){
 			if(best == null || wm.logMassLoc > best.logMassLoc){
 				best = wm;
@@ -104,11 +180,25 @@ public class Aligner {
       }
       backpointers.addFirst(bestBP);
       cur = bestBP.predecessor;
+    }*/
+
+    PackedAlignment cur = best;
+    LinkedList<BackPointer> bps = new LinkedList<BackPointer>();
+    while(preds.get(cur) != null){
+      PackedAlignment next = preds.get(cur);
+      BackPointer bp = predBPs.get(cur);
+      if(bp != null){
+        bps.add(bp);
+        LogInfo.logs("adding backpointer: %s", bp);
+      }
+      cur = next;
     }
     Alignment ret = new Alignment(state.startState);
-    for(BackPointer bp : backpointers){
+    while(bps.size() > 0){
+      BackPointer bp = bps.removeLast();
       ret = ret.extend(bp.alpha, bp.beta);
     }
+
     return ret;
   }
 

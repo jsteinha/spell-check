@@ -9,6 +9,7 @@ public class AlignModel implements Model<AbstractAlignment> {
 	HashMap<AbstractAlignment, PackedAlignment> cache;
 	HashBasedTable<PackedAlignment, PackedAlignment, Score> muCache;
   HashMap<Triple<PackedAlignment, PackedAlignment, PackedAlignment>, Double> KLCache;
+  HashBasedTable<PackedAlignment, PackedAlignment, Edge> edges;
 	public AlignModel(Params params, String source, Trie dictionary){
 		this.params = params;
 		this.source = source;
@@ -16,6 +17,7 @@ public class AlignModel implements Model<AbstractAlignment> {
 		cache = new HashMap<AbstractAlignment, PackedAlignment>();
 		muCache = HashBasedTable.create();
     KLCache = new HashMap<Triple<PackedAlignment, PackedAlignment, PackedAlignment>, Double>();
+    edges = HashBasedTable.create();
 	}
 	public Score mu(AbstractAlignment a, AbstractAlignment b){
 		// First, base case
@@ -29,10 +31,18 @@ public class AlignModel implements Model<AbstractAlignment> {
 			return ans;
 		}
 
+    /*boolean same = a.pack(this) == b.pack(this);
+    if(!same){ // add edge from less abstract to more abstract
+      edges.put(b.pack(this), a.pack(this), new Edge(0.0, null));
+    }*/
+
 		// Finally, recursion
 		ans = new Score();
 		for(BackPointer bp : b.pack(this).backpointers){
 			double last = muLocal(a, bp);
+      if(/*same && */bp.beta.indexOf("*") == -1){
+        edges.put(bp.predecessor.pack(this), a.pack(this), new Edge(last, bp));
+      }
 			Score rest = mu(a.goBack(bp), bp.predecessor);
 			ans = ans.combine(rest.increment(last));
 		}
