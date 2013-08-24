@@ -29,6 +29,9 @@ public class Alignment {
 		Assert.assertSubstringEquals(transfemeSource, source, sourcePosition, newSourcePosition);
 		
 		TrieNode newTargetPosition = targetPosition.getExtension(transfemeTarget);
+		if(newTargetPosition == null){
+			return null;
+		}
 		Assert.assertNonNull(newTargetPosition);
 		
 		ArrayList<Integer> newSourceBoundaries = 

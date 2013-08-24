@@ -75,12 +75,13 @@ public class Main implements Runnable {
     }
 		StatFig accuracy = new StatFig();
     StatFig fallOffBeam = new StatFig();
+		StatFig numNull = new StatFig();
 		int counter = 0;
     for(Example e : examplesTest){
       LogInfo.logs("correcting %s (target: %s)", e.source, e.target);
       AlignState state = Aligner.align(params, e.source, dictionary);
       Alignment best = Aligner.argmax(state);
-			boolean correct = ("^"+e.target+"$").equals(best.targetPosition.toString());
+			boolean correct = best != null && ("^"+e.target+"$").equals(best.targetPosition.toString());
       LogInfo.logs("best correction: %s (correct=%s)", best, correct);
 			accuracy.add(correct);
 
@@ -92,7 +93,15 @@ public class Main implements Runnable {
 		  AlignmentTrain cheat = AlignerTrain.argmax(stateCheat, params);
 			LogInfo.logs("cheater correction: %s", cheat);
 			LogInfo.begin_track("best stats");
-			double bestScore = best.score(params);
+			double bestScore;
+			if(best == null){
+				LogInfo.logs("skipping because NULL");
+				bestScore = Double.NEGATIVE_INFINITY;
+				numNull.add(true);
+			} else {
+				bestScore = best.score(params);
+				numNull.add(false);
+			}
 			LogInfo.end_track();
 			LogInfo.begin_track("cheater stats");
 			double cheaterScore = cheat.score(params);
@@ -108,9 +117,11 @@ public class Main implements Runnable {
 			if(++counter % 100 == 0){
 				LogInfo.logs("accuracy: %s", accuracy);
         LogInfo.logs("fall off beam: %s", fallOffBeam);
+				LogInfo.logs("num null: %s", numNull);
 			}
     }
 		LogInfo.logs("final accuracy: %s", accuracy);
     LogInfo.logs("final fall off beam: %s", fallOffBeam);
+		LogInfo.logs("final num null: %s", numNull);
 	}
 }

@@ -197,6 +197,9 @@ public class Aligner {
     while(bps.size() > 0){
       BackPointer bp = bps.removeLast();
       ret = ret.extend(bp.alpha, bp.beta);
+			if(ret == null){
+				return null;
+			}
     }
 
     return ret;
