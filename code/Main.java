@@ -21,6 +21,8 @@ public class Main implements Runnable {
 	public static int maxTest = 999999;
 	@Option(gloss="evaluation file name (train, dev)")
 	public static String evalName = "dev";
+	@Option(gloss="graph search regularization")
+	public static double graphReg = 0.7;
 
 	public static void main(String[] args){
 		Execution.run(args, new Main());

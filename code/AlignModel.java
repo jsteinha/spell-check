@@ -31,8 +31,8 @@ public class AlignModel implements Model<AbstractAlignment> {
 			return ans;
 		}
 
-    /*boolean same = a.pack(this) == b.pack(this);
-    if(!same){ // add edge from less abstract to more abstract
+    boolean same = a.pack(this) == b.pack(this);
+    /*if(!same){ // add edge from less abstract to more abstract
       edges.put(b.pack(this), a.pack(this), new Edge(0.0, null));
     }*/
 
@@ -41,7 +41,7 @@ public class AlignModel implements Model<AbstractAlignment> {
 		for(BackPointer bp : b.pack(this).backpointers){
 			double last = muLocal(a, bp);
       if(/*same && */bp.beta.indexOf("*") == -1){
-        edges.put(bp.predecessor.pack(this), a.pack(this), new Edge(last, bp));
+        edges.put(bp.predecessor.pack(this), a.pack(this), new Edge(last + (same ? 0.0 : -Main.graphReg), bp));
       }
 			Score rest = mu(a.goBack(bp), bp.predecessor);
 			ans = ans.combine(rest.increment(last));
