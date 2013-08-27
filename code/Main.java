@@ -23,6 +23,8 @@ public class Main implements Runnable {
 	public static String evalName = "dev";
 	@Option(gloss="graph search regularization")
 	public static double graphReg = 0.7;
+	@Option(gloss="whether to use abstract inference")
+	public static boolean useAbstract = true;
 
 	public static void main(String[] args){
 		Execution.run(args, new Main());
@@ -58,7 +60,7 @@ public class Main implements Runnable {
 		params.print();
 		LogInfo.end_track();
 
-    Trie dictionary = new Trie(true);
+    Trie dictionary = new Trie(useAbstract);
     Scanner dict = new Scanner(new File("../data/percy/dict.txt"));
     while(dict.hasNext()){
       String word = dict.next().toLowerCase();
@@ -81,10 +83,24 @@ public class Main implements Runnable {
 		int counter = 0;
     for(Example e : examplesTest){
       LogInfo.logs("correcting %s (target: %s)", e.source, e.target);
-      AlignState state = Aligner.align(params, e.source, dictionary);
-      Alignment best = Aligner.argmax(state);
-			boolean correct = best != null && ("^"+e.target+"$").equals(best.targetPosition.toString());
-      LogInfo.logs("best correction: %s (correct=%s)", best, correct);
+			Alignment best1 = null;
+			AlignmentTrain best2 = null;
+			AlignState state1 = null;
+			AlignStateTrain state2 = null;
+			if(useAbstract){
+      	state1 = Aligner.align(params, e.source, dictionary);
+      	best1 = Aligner.argmax(state1);
+			} else {
+				state2 = AlignerTrain.align(params, e.source, dictionary);
+				best2 = AlignerTrain.argmax(state2, params);
+			}
+			boolean correct;
+			if(useAbstract){
+				correct = best1 != null && ("^"+e.target+"$").equals(best1.targetPosition.toString());
+			} else {
+				correct = ("^"+e.target+"$").equals(best2.targetPosition.toString());
+			}
+      LogInfo.logs("best correction: %s (correct=%s)", useAbstract ? best1 : best2, correct);
 			accuracy.add(correct);
 
 			// additional info about whether beam search / scoring is working
@@ -96,12 +112,16 @@ public class Main implements Runnable {
 			LogInfo.logs("cheater correction: %s", cheat);
 			LogInfo.begin_track("best stats");
 			double bestScore;
-			if(best == null){
+			if((useAbstract? best1 : best2) == null){
 				LogInfo.logs("skipping because NULL");
 				bestScore = Double.NEGATIVE_INFINITY;
 				numNull.add(true);
 			} else {
-				bestScore = best.score(params);
+				if(useAbstract){
+					bestScore = best1.score(params);
+				} else {
+					bestScore = best2.score(params);
+				}
 				numNull.add(false);
 			}
 			LogInfo.end_track();
@@ -111,7 +131,11 @@ public class Main implements Runnable {
 			LogInfo.end_track();
 			boolean fellOffBeam = !correct && (cheaterScore > bestScore);
 			if(fellOffBeam && Main.printBeam){
-				state.printBeams();
+				if(useAbstract){
+					state1.printBeams();
+				} else {
+					state2.printBeams();
+				}
 			}
       fallOffBeam.add(!correct && (cheaterScore > bestScore));
 
