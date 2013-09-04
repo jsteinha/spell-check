@@ -40,19 +40,8 @@ public class Main implements Runnable {
 	}
 
 	public void runWithException() throws Exception {
-		Scanner in = new Scanner(new File("../data/percy/train.dat"));
-		List<Example> examples = new ArrayList<Example>();
-		int count = 0;
-    LogInfo.begin_track("Reading training examples");
-		while(in.hasNext() && count++ < maxTrain){
-			Example e = new Example("^"+in.next().toLowerCase()+"$", 
-                              in.next().toLowerCase());
-			LogInfo.logs(e);
-			if(e.source.matches("[a-z|$|^]+") && e.target.matches("[a-z]+")){
-				examples.add(e);
-			}
-		}
-    LogInfo.end_track();
+		//ArrayList<Example> examples = Reader.getTrain("../data/percy/train.dat");
+		ArrayList<Example> examples = Reader.getTrainChinese("../data/pinyin/train.dat");
 
 		Params params = EMLearner.learn(examples);
 		params = new AbstractedParams(params);
@@ -70,7 +59,7 @@ public class Main implements Runnable {
     }
     Scanner dev = new Scanner(new File("../data/percy/"+evalName+".dat"));
     List<Example> examplesTest = new ArrayList<Example>();
-    count = 0;
+    int count = 0;
     while(dev.hasNext() && count++ < maxTest){
       Example e = new Example("^"+dev.next().toLowerCase()+"$", dev.next().toLowerCase());
 			if(e.source.matches("[a-z|$|^]+") && e.target.matches("[a-z]+")){

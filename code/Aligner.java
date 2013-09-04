@@ -23,19 +23,35 @@ public class Aligner {
 			for(AbstractAlignment alignment : beam){
 				List<TrieNode> extensions = alignment.targetPosition.getAllExtensions(Main.maxTransfemeSize);
         //LogInfo.logs("%d extensions", extensions.size());
-				for(TrieNode targetExtension: extensions){
-					for(int i = alignment.sourcePosition; i <= source.length() && i <= alignment.sourcePosition+Main.maxTransfemeSize; i++){
+				for(int i = alignment.sourcePosition; i <= source.length() && i <= alignment.sourcePosition+Main.maxTransfemeSize; i++){
+					ArrayList<WithMass<AbstractAlignment>> alignments = new ArrayList<WithMass<AbstractAlignment>>();
+					for(TrieNode targetExtension: extensions){
 						if(i == alignment.sourcePosition && targetExtension == alignment.targetPosition){
 							continue; // make sure we have at least one change
 						}
             String tSource = source.substring(alignment.sourcePosition, i);
             String tTarget = alignment.targetPosition.spanTo(targetExtension);
-            if(params.get(tSource, tTarget) == Double.NEGATIVE_INFINITY) continue;
+						double param = params.get(tSource, tTarget);
+            if(param == Double.NEGATIVE_INFINITY) continue;
 						AbstractAlignment newAlignment = 
 							alignment.extend(tSource, tTarget, model);
-						state.add(newAlignment);
+						alignments.add(new WithMass<AbstractAlignment>(newAlignment, param));
+						//state.add(newAlignment);
+					}
+					Collections.sort(alignments);
+					for(int r = 0; r < Math.min(10, alignments.size()); r++){
+						state.add(alignments.get(r).particle);
 					}
 				}
+
+				//Collections.sort(alignments);
+				//LogInfo.begin_track("sort alignments");
+				//for(int i = 0; i < Math.min(30, alignments.size()); i++){
+					//LogInfo.logs("adding alignment with param mass = %.3f", alignments.get(i).logMassLoc);
+					//LogInfo.logs("\t(%s)", alignments.get(i).particle);
+					//state.add(alignments.get(i).particle);
+				//}
+				//LogInfo.end_track();
 			}
       //LogInfo.end_track();
 		}
