@@ -13,8 +13,10 @@ public class Main implements Runnable {
 	public static int beamSize = 0;
   @Option
   public static boolean printBeam = false;
-	@Option(gloss="max transfeme size")
-	public static int maxTransfemeSize = 2;
+	@Option(gloss="max source transfeme size")
+	public static int sourceTransfemeSize = 4;
+  @Option(gloss="max target transfeme size")
+  public static int targetTransfemeSize = 1;
 	@Option(gloss="maximum number of training examples")
 	public static int maxTrain = 999999;
 	@Option(gloss="maximum number of test examples")
@@ -54,20 +56,13 @@ public class Main implements Runnable {
     Scanner dict = new Scanner(new File("../data/pinyin/dict.dat"));
     while(dict.hasNext()){
       String word = dict.next().toLowerCase();
-      if(word.matches("[a-z]+")){
+      //if(word.matches("[a-z]+")){
         dictionary.add(word);
-      }
+      //}
     }
-    //Scanner dev = new Scanner(new File("../data/percy/"+evalName+".dat"));
-    Scanner dev = new Scanner(new File("../data/pinyin/train.dat"));
-    List<Example> examplesTest = new ArrayList<Example>();
-    int count = 0;
-    while(dev.hasNext() && count++ < maxTest){
-      Example e = new Example("^"+dev.next().toLowerCase()+"$", dev.next().toLowerCase());
-			if(e.source.matches("[a-z|$|^]+") && e.target.matches("[a-z]+")){
-				examplesTest.add(e);
-			}
-    }
+    //ArrayList<Example> examplesTest = Reader.getTest("../data/percy/"+evalName+".dat");
+    ArrayList<Example> examplesTest = Reader.getTestChinese("../data/pinyin/train.dat");
+
 		StatFig accuracy = new StatFig();
     StatFig fallOffBeam = new StatFig();
 		StatFig numNull = new StatFig();

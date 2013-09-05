@@ -26,7 +26,7 @@ public class Reader {
 		int count = 0;
 		LogInfo.begin_track("Reading training examples (Chinese)");
 		while(in.hasNext() && count++ < Main.maxTrain){
-			String source = in.next(), target = in.next();
+			String target = in.next(), source = in.next();
 			Example e = new Example("^"+source+"$", target);
 			LogInfo.logs(e);
 			examples.add(e);
@@ -39,27 +39,27 @@ public class Reader {
 
 
 	static ArrayList<Example> getTest(String filename) throws Exception {
-    Scanner dev = new Scanner(new File("../data/pinyin/train.dat"));
-    List<Example> examplesTest = new ArrayList<Example>();
+    Scanner dev = new Scanner(new File(filename));
+    ArrayList<Example> examplesTest = new ArrayList<Example>();
     int count = 0;
-    while(dev.hasNext() && count++ < maxTest){
+    while(dev.hasNext() && count++ < Main.maxTest){
       Example e = new Example("^"+dev.next().toLowerCase()+"$", dev.next().toLowerCase());
 			if(e.source.matches("[a-z|$|^]+") && e.target.matches("[a-z]+")){
 				examplesTest.add(e);
 			}
     }
-
-
+    return examplesTest;
 	}
 
 	static ArrayList<Example> getTestChinese(String filename) throws Exception {
-
-
-
+    Scanner dev = new Scanner(new File(filename));
+    ArrayList<Example> examplesTest = new ArrayList<Example>();
+    int count = 0;
+    while(dev.hasNext() && count++ < Main.maxTest){
+      String target = dev.next(), source = dev.next();
+		  examplesTest.add(new Example("^"+source+"$", target));
+    }
+    return examplesTest;
 	}
-
-
-
-
 
 }

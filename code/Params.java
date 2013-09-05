@@ -11,19 +11,26 @@ public class Params {
 		return StrUtils.join(source, "->", target);
 	}
 	protected double getDefault(String source, String target){
-    if(source.length() > Main.maxTransfemeSize || target.length() > Main.maxTransfemeSize){
+    if(source.length() > Main.sourceTransfemeSize || target.length() > Main.targetTransfemeSize){
       return Double.NEGATIVE_INFINITY;
     }
-		if(source.equals(target)){
-			return 0.0;
-		} else {
-			/*double E = 0.0;
-			int delta = source.length() - target.length();
-			if(delta > 1){
-				//E += 1.5 * delta * (delta-1);
-			}*/
-			return -1.0-2.0 * StrUtils.dist(source, target); //- E;
-		}
+    // modified for Chinese
+    if(source.equals(target)){
+      return 0.0;
+    }
+    else {
+      return -1.0 * source.length();
+    }
+		//if(source.equals(target)){
+		//	return 0.0;
+		//} else {
+		//	/*double E = 0.0;
+		//	int delta = source.length() - target.length();
+		//	if(delta > 1){
+		//		//E += 1.5 * delta * (delta-1);
+		//	}*/
+		//	return -1.0-2.0 * StrUtils.dist(source, target); //- E;
+		//}
 	}
 	double get(String source, String target){
 		String index = toIndex(source, target);

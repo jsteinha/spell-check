@@ -21,9 +21,9 @@ public class Aligner {
       //LogInfo.logs("beam size: %d", beam.size());
       //LogInfo.begin_track("extending alignments");
 			for(AbstractAlignment alignment : beam){
-				List<TrieNode> extensions = alignment.targetPosition.getAllExtensions(Main.maxTransfemeSize);
+				List<TrieNode> extensions = alignment.targetPosition.getAllExtensions(Main.targetTransfemeSize);
         //LogInfo.logs("%d extensions", extensions.size());
-				for(int i = alignment.sourcePosition; i <= source.length() && i <= alignment.sourcePosition+Main.maxTransfemeSize; i++){
+				for(int i = alignment.sourcePosition; i <= source.length() && i <= alignment.sourcePosition+Main.sourceTransfemeSize; i++){
 					ArrayList<WithMass<AbstractAlignment>> alignments = new ArrayList<WithMass<AbstractAlignment>>();
 					for(TrieNode targetExtension: extensions){
 						if(i == alignment.sourcePosition && targetExtension == alignment.targetPosition){

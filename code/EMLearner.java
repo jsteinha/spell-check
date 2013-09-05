@@ -24,7 +24,7 @@ public class EMLearner {
 			String baseStr = "^"+e.target+"$";
 
 			for(int i = 0; i <= baseStr.length(); i++){
-				for(int j = 0; j <= Main.maxTransfemeSize; j++){
+				for(int j = 0; j <= Main.targetTransfemeSize; j++){
 					if(i+j <= baseStr.length()){
 						Util.update(baseCounts, baseStr.substring(i,i+j), 1.0);
 					}

@@ -15,9 +15,9 @@ public class AlignerTrain {
 			List<AlignmentTrain> beam = state.next(); // returns truncated beam
 			for(AlignmentTrain alignment : beam){
 				// TODO: want something more efficient for test time
-				List<TrieNode> extensions = alignment.targetPosition.getAllExtensions(Main.maxTransfemeSize);
+				List<TrieNode> extensions = alignment.targetPosition.getAllExtensions(Main.targetTransfemeSize);
 				for(TrieNode targetExtension : extensions){
-					for(int i = alignment.sourcePosition; i <= source.length() && i <= alignment.sourcePosition+Main.maxTransfemeSize; i++){
+					for(int i = alignment.sourcePosition; i <= source.length() && i <= alignment.sourcePosition+Main.sourceTransfemeSize; i++){
 						if(i == alignment.sourcePosition && targetExtension == alignment.targetPosition){
 							continue; // make sure we make at least one change
 						}

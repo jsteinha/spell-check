@@ -2,7 +2,8 @@ import java.util.*;
 import fig.basic.LogInfo;
 public class TrieNode {
 	static int GUIDCOUNT = 0;
-	TrieNode[] children;
+	//private TrieNode[] children;
+  HashMap<Character, TrieNode> children;
 	char c;
 	int guid;
 	int depth;
@@ -14,7 +15,8 @@ public class TrieNode {
 		this.parent = parent;
 		this.root = parent == null ? this : parent.root;
 		this.depth = parent == null ? 0 : parent.depth + 1;
-		children = new TrieNode[29];
+		//children = new TrieNode[29];
+    children = new HashMap<Character, TrieNode>();
 		count = 0;
 	}
   void addAbstract(String suffix){
@@ -39,27 +41,31 @@ public class TrieNode {
 		count++;
 		return;
 	}*/
-	int getIndex(char c){
-		int index;
-		if(c >= 'a' && c <= 'z'){
-			index = (int)(c-'a');
-		} else if(c == '$'){
-			index = 26;
-		} else if(c == '^'){
-			index = 27;
-		} else if(c == '*'){
-			index = 28;
-		} else {
-			throw new RuntimeException("invalid character: " + c);
-		}
-		return index;
-	}
+	//int getIndex(char c){
+	//	int index;
+	//	if(c >= 'a' && c <= 'z'){
+	//		index = (int)(c-'a');
+	//	} else if(c == '$'){
+	//		index = 26;
+	//	} else if(c == '^'){
+	//		index = 27;
+	//	} else if(c == '*'){
+	//		index = 28;
+	//	} else {
+	//		throw new RuntimeException("invalid character: " + c);
+	//	}
+	//	return index;
+	//}
 	TrieNode getChild(char c){
-		int index = getIndex(c);
-		if(children[index] == null){
-			children[index] = new TrieNode(c, this);
-		}
-		return children[index];
+    if(children.get(c) == null){
+      children.put(c, new TrieNode(c, this));
+    }
+    return children.get(c);
+		//int index = getIndex(c);
+		//if(children[index] == null){
+		//	children[index] = new TrieNode(c, this);
+		//}
+		//return children[index];
 	}
 
 	String spanTo(TrieNode target){
@@ -77,19 +83,25 @@ public class TrieNode {
 		if(extension.length() == 0){
 			return this;
 		} else {
-			int index = getIndex(extension.charAt(0));
-			if(children[index] == null){
-				return null;
-			} else {
-				return children[index].getExtension(extension.substring(1));
-			}
+      char c = extension.charAt(0);
+      if(children.get(c) == null){
+        return null;
+      } else {
+        return children.get(c).getExtension(extension.substring(1));
+      }
+			//int index = getIndex(extension.charAt(0));
+			//if(children[index] == null){
+			//	return null;
+			//} else {
+			//	return children[index].getExtension(extension.substring(1));
+			//}
 		}
 	}
 	LinkedList<TrieNode> getAllExtensions(int len){
 		LinkedList<TrieNode> ret = new LinkedList<TrieNode>();
 		ret.add(this);
 		if(len != 0){
-			for(TrieNode child : children){
+			for(TrieNode child : children.values()){
 				if(child != null){
 					ret.addAll(child.getAllExtensions(len-1));
 				}
@@ -100,7 +112,7 @@ public class TrieNode {
 	LinkedList<TrieNode> getAllExtensions(){
 		LinkedList<TrieNode> ret = new LinkedList<TrieNode>();
 		ret.add(this);
-		for(TrieNode child : children){
+		for(TrieNode child : children.values()){
 			if(child != null){
 				ret.addAll(child.getAllExtensions());
 			}
@@ -121,7 +133,7 @@ public class TrieNode {
 			System.out.println();
 		} else {
 			boolean buffer2 = true;
-			for(TrieNode child : children){
+			for(TrieNode child : children.values()){
 				if(child != null){
 					child.print(indent + 1, buffer2);
 					buffer2 = false;
