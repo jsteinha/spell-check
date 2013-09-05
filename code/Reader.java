@@ -22,18 +22,41 @@ public class Reader {
 
 	static ArrayList<Example> getTrainChinese(String filename) throws Exception {
 		Scanner in = new Scanner(new File(filename));
+		ArrayList<Example> examples = new ArrayList<Example>();
 		int count = 0;
 		LogInfo.begin_track("Reading training examples (Chinese)");
 		while(in.hasNext() && count++ < Main.maxTrain){
 			String source = in.next(), target = in.next();
-			LogInfo.logs("source: %s", source);
-			LogInfo.logs("target: %s", target);
+			Example e = new Example("^"+source+"$", target);
+			LogInfo.logs(e);
+			examples.add(e);
+			//LogInfo.logs("source: %s", source);
+			//LogInfo.logs("target: %s", target);
 		}
 		LogInfo.end_track();
-		return null;
+		return examples;
 	}
 
 
+	static ArrayList<Example> getTest(String filename) throws Exception {
+    Scanner dev = new Scanner(new File("../data/pinyin/train.dat"));
+    List<Example> examplesTest = new ArrayList<Example>();
+    int count = 0;
+    while(dev.hasNext() && count++ < maxTest){
+      Example e = new Example("^"+dev.next().toLowerCase()+"$", dev.next().toLowerCase());
+			if(e.source.matches("[a-z|$|^]+") && e.target.matches("[a-z]+")){
+				examplesTest.add(e);
+			}
+    }
+
+
+	}
+
+	static ArrayList<Example> getTestChinese(String filename) throws Exception {
+
+
+
+	}
 
 
 

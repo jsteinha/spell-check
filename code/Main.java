@@ -50,14 +50,16 @@ public class Main implements Runnable {
 		LogInfo.end_track();
 
     Trie dictionary = new Trie(useAbstract);
-    Scanner dict = new Scanner(new File("../data/percy/dict.txt"));
+    //Scanner dict = new Scanner(new File("../data/percy/dict.txt"));
+    Scanner dict = new Scanner(new File("../data/pinyin/dict.dat"));
     while(dict.hasNext()){
       String word = dict.next().toLowerCase();
       if(word.matches("[a-z]+")){
         dictionary.add(word);
       }
     }
-    Scanner dev = new Scanner(new File("../data/percy/"+evalName+".dat"));
+    //Scanner dev = new Scanner(new File("../data/percy/"+evalName+".dat"));
+    Scanner dev = new Scanner(new File("../data/pinyin/train.dat"));
     List<Example> examplesTest = new ArrayList<Example>();
     int count = 0;
     while(dev.hasNext() && count++ < maxTest){
